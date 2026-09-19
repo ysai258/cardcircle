@@ -86,45 +86,51 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
             <h2 className="text-sm font-semibold text-ink-muted">
               {group.name}
             </h2>
-            <ul className="mt-3 grid gap-4 sm:grid-cols-2">
+            <ul className="mt-3 grid gap-4 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))]">
               {group.cards.map((card) => (
                 <li key={card.id} className="space-y-2">
                   {/* The same card face used everywhere else, so a card
                       looks the same in My Cards as in discovery. */}
                   <CardTile card={card} ownerLabel={false} />
 
-                  <div className="flex flex-wrap items-center gap-2 px-0.5">
-                    <VisibilityBadge discoverability={card.discoverability} />
-                    {card.expiry && (
-                      <span className="numeric text-xs text-ink-muted">
-                        Expires {card.expiry}
-                        <span className="text-ink-faint">
-                          {' '}
-                          (
-                          {card.sharing.expiry === 'friends'
-                            ? 'shared'
-                            : 'not shared'}
-                          )
+                  {/* Two fixed rows rather than one wrapping row: a card
+                      with an expiry used to push its buttons onto a second
+                      line while its neighbour kept them inline, so cards in
+                      the same row ended up different heights. */}
+                  <div className="space-y-1.5 px-0.5">
+                    <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1">
+                      <VisibilityBadge discoverability={card.discoverability} />
+                      {card.expiry && (
+                        <span className="numeric text-xs text-ink-muted">
+                          Expires {card.expiry}
+                          <span className="text-ink-faint">
+                            {' '}
+                            (
+                            {card.sharing.expiry === 'friends'
+                              ? 'shared'
+                              : 'not shared'}
+                            )
+                          </span>
                         </span>
-                      </span>
-                    )}
+                      )}
+                    </div>
 
-                    <span className="flex-1" />
-
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setSharingCard(card)}
-                    >
-                      Sharing
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setDeletingCard(card)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setSharingCard(card)}
+                      >
+                        Sharing
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setDeletingCard(card)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </div>
                 </li>
               ))}

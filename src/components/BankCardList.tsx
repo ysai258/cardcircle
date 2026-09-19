@@ -27,7 +27,7 @@ export function BankCardList({ cards }: { cards: CardSummaryDTO[] }) {
 
   return (
     <>
-      <ul className="grid gap-3 sm:grid-cols-2">
+      <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))]">
         {cards.map((card) => (
           <li key={card.id}>
             <CardTile card={card} onOpen={() => setOpenCardId(card.id)} />

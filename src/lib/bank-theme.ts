@@ -59,6 +59,9 @@ const THEMES: Record<string, BankTheme> = {
   HSBC: { from: '#9e000c', to: '#db0011', ...LIGHT_INK, label: 'HSBC' },
   CITI: { from: '#014f86', to: '#0a86c4', ...LIGHT_INK, label: 'Citi' },
   DBS: { from: '#a81d1d', to: '#e04040', ...LIGHT_INK, label: 'DBS' },
+  // Blue into orange, echoing CSB's wordmark-and-swoosh pairing and keeping
+  // it distinguishable from the other blue issuers.
+  CSB: { from: '#014a8f', to: '#e8762a', ...LIGHT_INK, label: 'CSB' },
 }
 
 /** Neutral slate for any bank without a defined palette. */

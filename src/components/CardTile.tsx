@@ -27,7 +27,7 @@ export function CardTile({
 
   const face = (
     <div
-      className="relative flex aspect-[1.62/1] w-full flex-col overflow-hidden rounded-2xl p-4 shadow-raised transition-transform duration-200 group-hover:-translate-y-0.5"
+      className="relative flex aspect-[1.62/1] w-full flex-col overflow-hidden rounded-xl p-3.5 shadow-raised transition-transform duration-200 group-hover:-translate-y-0.5"
       style={{ background: bankGradient(card.bank.code), color: theme.ink }}
     >
       {/* Soft highlight so flat gradients read as a physical surface. */}
@@ -43,7 +43,7 @@ export function CardTile({
             {bankInitials(card.bank.code, card.bank.name)}
           </p>
           <p
-            className="mt-0.5 truncate text-sm font-semibold"
+            className="mt-0.5 truncate text-[13px] font-semibold"
             style={{ color: theme.ink }}
           >
             {card.nickname}
@@ -58,10 +58,10 @@ export function CardTile({
         {/* Chip. Decorative, but it is what makes the tile read as a card. */}
         <div
           aria-hidden="true"
-          className="mb-2 h-6 w-8 rounded-md border border-white/25 bg-gradient-to-br from-amber-200/90 to-amber-400/80"
+          className="mb-1.5 h-5 w-7 rounded border border-white/25 bg-gradient-to-br from-amber-200/90 to-amber-400/80"
         />
 
-        <p className="numeric text-[15px] tracking-[0.1em]" style={{ color: theme.ink }}>
+        <p className="numeric text-[13px] tracking-[0.06em]" style={{ color: theme.ink }}>
           <span>{card.bin}</span>
           <span aria-hidden="true" className="px-1 opacity-70">
             •• ••••
@@ -73,7 +73,7 @@ export function CardTile({
         </span>
       </div>
 
-      <div className="relative mt-3 flex items-end justify-between gap-2">
+      <div className="relative mt-2 flex items-end justify-between gap-2">
         <div className="min-w-0">
           {ownerLabel && (
             <p
@@ -111,7 +111,7 @@ export function CardTile({
     <button
       type="button"
       onClick={onOpen}
-      className="group w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="group w-full rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       aria-label={`${card.bank.name} ${card.nickname}, ${cardTypeLabel(card.cardType)}, owned by ${card.owner.name}`}
     >
       {face}
