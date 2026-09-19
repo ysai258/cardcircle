@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { AppNav } from '@/components/AppNav'
 import { getCurrentUser } from '@/server/modules/auth/session'
-import { listIncomingRequests } from '@/server/modules/friends/service'
+import { countIncomingRequests } from '@/server/modules/friends/service'
 
 /**
  * Authenticated shell.
@@ -20,11 +20,11 @@ export default async function AppLayout({
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const incoming = await listIncomingRequests(user.id)
+  const pendingRequests = await countIncomingRequests(user.id)
 
   return (
     <div className="flex min-h-full flex-col">
-      <AppNav userName={user.name} pendingRequests={incoming.length} />
+      <AppNav userName={user.name} pendingRequests={pendingRequests} />
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8">
         {children}
       </main>

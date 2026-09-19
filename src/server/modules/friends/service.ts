@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, desc, eq, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, or, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import { blocks, friendships, reports, users } from '@/db/schema'
 import { conflict, notFound, validationFailed } from '@/server/common/errors'
@@ -344,6 +344,31 @@ export async function listFriends(userId: string): Promise<FriendSummary[]> {
     .orderBy(asc(users.name))
 
   return rows
+}
+
+/**
+ * How many friend requests are waiting.
+ *
+ * Separate from listIncomingRequests() because the navigation badge needs
+ * only the number, and that runs on EVERY page render — including every
+ * <Link> prefetch, which multiplies it by the number of links on the page.
+ * Fetching joined rows, sorting them and mapping them into objects only to
+ * read `.length` made it the most-executed query in the application.
+ */
+export async function countIncomingRequests(userId: string): Promise<number> {
+  const [row] = await db
+    .select({ total: count() })
+    .from(friendships)
+    .innerJoin(users, eq(users.id, friendships.requesterId))
+    .where(
+      and(
+        eq(friendships.recipientId, userId),
+        eq(friendships.status, 'pending'),
+        eq(users.status, 'active'),
+      ),
+    )
+
+  return Number(row?.total ?? 0)
 }
 
 export async function listIncomingRequests(
