@@ -154,7 +154,9 @@ NULL actor.
 
 Designed for Vercel + Neon on free tiers.
 
-1. Create a Neon project; copy the **pooled** connection string.
+1. Create a Supabase project; copy the **transaction pooler** connection
+   string (port 6543), not the direct one — Supabase's direct host is
+   IPv6-only and Vercel's functions cannot reach it.
 2. Import the repo into Vercel.
 3. Set `DATABASE_URL`, `APP_MASTER_KEY` (a *different* 32-byte key from
    development) and `NODE_ENV=production`.
