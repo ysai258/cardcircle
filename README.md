@@ -108,7 +108,7 @@ can actually do.
 | Concern | Choice | Why |
 | --- | --- | --- |
 | Framework | Next.js 16 | One deployment, free on Vercel |
-| Database | Postgres 18 (Neon in production) | Real relational constraints |
+| Database | Postgres 18 (Supabase in production) | Real relational constraints |
 | ORM | Drizzle | SQL-first migrations; TS schema makes the prohibited-column check trivial |
 | Passwords | Argon2id (`@node-rs/argon2`) | OWASP parameters, ~75 ms |
 | Validation | Zod, `strict` everywhere | Unknown keys are errors, not ignored |
@@ -152,15 +152,28 @@ NULL actor.
 
 ## Deployment
 
-Designed for Vercel + Neon on free tiers.
+Designed for Vercel + Supabase on free tiers, both in Mumbai
+(`ap-south-1` / `bom1`) so queries do not cross a region.
+
+**Why Supabase rather than Neon**, given both are free: Neon's free tier
+suspends its compute after about five minutes idle, and this app is used
+sporadically — someone checks it while shopping, then closes it. That made a
+cold start the normal case, not the exception: the first request after a
+quiet spell took over a minute. Supabase only pauses after about a week, and
+a daily keep-alive cron resets that clock so it never arrives.
+
+The same trick cannot rescue Neon: a five-minute window needs a ping every
+few minutes — roughly 360 a day, beyond Hobby's daily cron granularity, and
+about 730 compute-hours a month against a 191-hour allowance.
 
 1. Create a Supabase project; copy the **transaction pooler** connection
    string (port 6543), not the direct one — Supabase's direct host is
    IPv6-only and Vercel's functions cannot reach it.
 2. Import the repo into Vercel.
 3. Set `DATABASE_URL`, `APP_MASTER_KEY` (a *different* 32-byte key from
-   development) and `NODE_ENV=production`.
-4. Run `npm run db:migrate` against the Neon URL once.
+   development) and `CRON_SECRET` (any 16+ random characters).
+4. Nothing else: migrations run during the Vercel build, and the bank list
+   ships as migration 0001.
 
 **Do not seed production.** `db:seed` refuses to run when
 `NODE_ENV=production`, but it also truncates every table, so keep it away.
