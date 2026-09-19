@@ -1,0 +1,22 @@
+# Local development database only. Production uses managed Postgres (Neon).
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: cardcircle-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cardcircle
+      POSTGRES_PASSWORD: cardcircle_local_dev
+      POSTGRES_DB: cardcircle
+    ports:
+      - "55433:5432"
+    volumes:
+      - cardcircle_pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardcircle -d cardcircle"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  cardcircle_pgdata:
