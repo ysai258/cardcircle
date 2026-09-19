@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '@/server/crypto/password'
-import { safeText } from '@/server/common/validation'
+import { mobileNumberSchema, safeText } from '@/server/common/validation'
 
 /**
  * Authentication schemas.
@@ -10,11 +10,7 @@ import { safeText } from '@/server/common/validation'
  * self-asserted and unverified.
  */
 
-const phoneSchema = z
-  .string()
-  .trim()
-  .min(4, 'Enter a mobile number')
-  .max(20, 'That does not look like a mobile number')
+const phoneSchema = mobileNumberSchema
 
 /**
  * Password policy: length only.

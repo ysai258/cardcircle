@@ -1,13 +1,18 @@
 import { Badge } from '@/components/ui/Badge'
 import { cardTypeLabel, NetworkMark } from '@/components/NetworkMark'
+import { bankGradient, bankInitials, bankTheme } from '@/lib/bank-theme'
 import type { CardSummaryDTO } from '@/server/modules/cards/dto'
 
 /**
- * One card in a list.
+ * One card, drawn as a card.
  *
- * Shows only what CardSummaryDTO carries — bank, name, type, network, BIN
- * and last 4. There is no branch here that could reveal an expiry or a phone
- * number, because the type it receives has nowhere to put them.
+ * The face is laid out like a real one — issuer top-left, network top-right,
+ * chip, then the digits — because that is how people recognise their own
+ * cards. The number line shows what CardCircle actually holds: the real BIN,
+ * dots for the six digits nobody stores, and the real last four.
+ *
+ * The background is the issuer's brand colour, never its logo. A colour is
+ * decoration; a logo would imply an affiliation we do not have.
  */
 export function CardTile({
   card,
@@ -18,55 +23,98 @@ export function CardTile({
   onOpen?: () => void
   ownerLabel?: boolean
 }) {
-  const content = (
-    <>
-      <div className="flex items-start justify-between gap-3">
+  const theme = bankTheme(card.bank.code)
+
+  const face = (
+    <div
+      className="relative flex aspect-[1.62/1] w-full flex-col overflow-hidden rounded-2xl p-4 shadow-raised transition-transform duration-200 group-hover:-translate-y-0.5"
+      style={{ background: bankGradient(card.bank.code), color: theme.ink }}
+    >
+      {/* Soft highlight so flat gradients read as a physical surface. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-10 -top-16 size-44 rounded-full opacity-20"
+        style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }}
+      />
+
+      <div className="relative flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">
+          <p className="text-[11px] font-semibold tracking-wider">
+            {bankInitials(card.bank.code, card.bank.name)}
+          </p>
+          <p
+            className="mt-0.5 truncate text-sm font-semibold"
+            style={{ color: theme.ink }}
+          >
             {card.nickname}
           </p>
-          {card.variant && (
-            <p className="truncate text-xs text-ink-muted">{card.variant}</p>
-          )}
         </div>
-        <NetworkMark network={card.network} />
+        <NetworkMark network={card.network} onBrand />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
-        <span>{cardTypeLabel(card.cardType)}</span>
-        <span aria-hidden="true">·</span>
-        <span className="numeric">BIN {card.bin}</span>
-        <span aria-hidden="true">·</span>
-        <span className="numeric">
-          {/* Screen readers get words; sighted users get the dot pattern. */}
-          <span aria-hidden="true">•••• {card.last4}</span>
-          <span className="sr-only">ending {card.last4}</span>
+      {/* mt-auto pushes the chip + number block down as one unit, so the
+          face has a single gap rather than two uneven ones. */}
+      <div className="relative mt-auto">
+        {/* Chip. Decorative, but it is what makes the tile read as a card. */}
+        <div
+          aria-hidden="true"
+          className="mb-2 h-6 w-8 rounded-md border border-white/25 bg-gradient-to-br from-amber-200/90 to-amber-400/80"
+        />
+
+        <p className="numeric text-[15px] tracking-[0.1em]" style={{ color: theme.ink }}>
+          <span>{card.bin}</span>
+          <span aria-hidden="true" className="px-1 opacity-70">
+            •• ••••
+          </span>
+          <span>{card.last4}</span>
+        </p>
+        <span className="sr-only">
+          BIN {card.bin}, ending {card.last4}
         </span>
       </div>
 
-      {ownerLabel && (
-        <p className="mt-3 text-xs text-ink-faint">
-          Owned by <span className="text-ink-muted">{card.owner.name}</span>
-        </p>
-      )}
-    </>
+      <div className="relative mt-3 flex items-end justify-between gap-2">
+        <div className="min-w-0">
+          {ownerLabel && (
+            <p
+              className="truncate text-[11px] uppercase tracking-wide"
+              style={{ color: theme.inkMuted }}
+            >
+              {card.owner.name}
+            </p>
+          )}
+          {card.variant && !ownerLabel && (
+            <p
+              className="truncate text-[11px]"
+              style={{ color: theme.inkMuted }}
+            >
+              {card.variant}
+            </p>
+          )}
+        </div>
+        <span
+          className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+          style={{
+            background: 'rgba(255,255,255,0.18)',
+            color: theme.ink,
+          }}
+        >
+          {cardTypeLabel(card.cardType)}
+        </span>
+      </div>
+    </div>
   )
 
-  if (!onOpen) {
-    return (
-      <div className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-4 shadow-card">
-        {content}
-      </div>
-    )
-  }
+  if (!onOpen) return <div className="group">{face}</div>
 
   return (
     <button
       type="button"
       onClick={onOpen}
-      className="w-full rounded-(--radius-card) border border-border-subtle bg-surface-raised p-4 text-left shadow-card transition-colors hover:border-border-strong hover:bg-surface-sunken"
+      className="group w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      aria-label={`${card.bank.name} ${card.nickname}, ${cardTypeLabel(card.cardType)}, owned by ${card.owner.name}`}
     >
-      {content}
+      {face}
     </button>
   )
 }
@@ -78,10 +126,10 @@ export function VisibilityBadge({
   discoverability: 'nobody' | 'friends' | 'everyone'
 }) {
   if (discoverability === 'nobody') {
-    return <Badge tone="neutral">🔒 Private</Badge>
+    return <Badge tone="neutral">Private</Badge>
   }
   if (discoverability === 'friends') {
-    return <Badge tone="accent">👥 Friends</Badge>
+    return <Badge tone="accent">Friends only</Badge>
   }
-  return <Badge tone="success">🌐 Discoverable</Badge>
+  return <Badge tone="success">Discoverable</Badge>
 }

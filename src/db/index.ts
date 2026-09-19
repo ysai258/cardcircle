@@ -23,7 +23,13 @@ function createClient() {
     max: isProduction ? 1 : 5,
     prepare: false,
     idle_timeout: 20,
-    connect_timeout: 10,
+    /**
+     * Generous on purpose. Neon's free tier suspends its compute after a few
+     * minutes of inactivity, and the first connection afterwards waits for it
+     * to wake. At 10s that wait became a connection FAILURE rather than a slow
+     * page, so an idle app looked broken instead of sluggish.
+     */
+    connect_timeout: 30,
     onnotice: () => {},
   })
 }

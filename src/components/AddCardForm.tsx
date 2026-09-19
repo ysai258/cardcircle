@@ -4,7 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
+import { Combobox } from '@/components/ui/Combobox'
 import { SelectField, TextField } from '@/components/ui/Field'
+import { bankGradient } from '@/lib/bank-theme'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch, ApiError, fieldError } from '@/lib/api'
 
@@ -19,7 +21,7 @@ import { apiFetch, ApiError, fieldError } from '@/lib/api'
  * run again server-side in createCardSchema, which is the copy that counts.
  */
 
-type Bank = { id: string; name: string }
+type Bank = { id: string; name: string; code: string }
 
 const NETWORKS = [
   { value: 'visa', label: 'Visa' },
@@ -33,6 +35,8 @@ export function AddCardForm({ banks }: { banks: Bank[] }) {
   const { toast } = useToast()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  const [bankId, setBankId] = useState('')
+  const [bankIssue, setBankIssue] = useState<string | undefined>()
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -42,11 +46,19 @@ export function AddCardForm({ banks }: { banks: Bank[] }) {
     const form = new FormData(event.currentTarget)
     const expiry = String(form.get('expiry') ?? '').trim()
 
+    // The combobox writes to a hidden input, so an untouched field submits
+    // an empty string rather than failing the browser's own required check.
+    if (bankId === '') {
+      setBankIssue('Choose a bank')
+      setPending(false)
+      return
+    }
+
     try {
       await apiFetch('/api/me/cards', {
         method: 'POST',
         body: JSON.stringify({
-          bankId: String(form.get('bankId') ?? ''),
+          bankId,
           nickname: String(form.get('nickname') ?? ''),
           variant: String(form.get('variant') ?? '').trim() || null,
           cardType: String(form.get('cardType') ?? 'credit'),
@@ -88,22 +100,36 @@ export function AddCardForm({ banks }: { banks: Bank[] }) {
       </div>
 
       <div className="space-y-4 rounded-(--radius-card) border border-border-subtle bg-surface-raised p-5 shadow-card">
-        <SelectField
+<Combobox
           label="Bank"
           name="bankId"
-          required
-          error={fieldError(error, 'bankId')}
-          defaultValue=""
-        >
-          <option value="" disabled>
-            Select a bank
-          </option>
-          {banks.map((bank) => (
-            <option key={bank.id} value={bank.id}>
-              {bank.name}
-            </option>
-          ))}
-        </SelectField>
+          placeholder="Type to search 25 banks…"
+          hint="Start typing — “sbi”, “kotak”, “amex” all work."
+          error={fieldError(error, 'bankId') ?? bankIssue}
+          onChange={(value) => {
+            setBankId(value)
+            setBankIssue(undefined)
+          }}
+          options={banks.map((bank) => ({
+            value: bank.id,
+            label: bank.name,
+            // Lets "sbi" match "State Bank of India".
+            keywords: bank.code,
+          }))}
+          renderOption={(option) => {
+            const bank = banks.find((candidate) => candidate.id === option.value)
+            return (
+              <span className="flex items-center gap-2.5">
+                <span
+                  aria-hidden="true"
+                  className="size-5 shrink-0 rounded"
+                  style={{ background: bankGradient(bank?.code ?? '') }}
+                />
+                {option.label}
+              </span>
+            )
+          }}
+        />
 
         <TextField
           label="Card nickname"

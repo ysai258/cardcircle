@@ -20,10 +20,24 @@ const NETWORK_STYLES: Record<CardNetwork, string> = {
   amex: 'text-[#1c5faa] dark:text-[#8fc2f0]',
 }
 
-export function NetworkMark({ network }: { network: CardNetwork }) {
+/**
+ * `onBrand` renders the mark on a coloured card face, where the usual
+ * brand-tinted colours would not have enough contrast.
+ */
+export function NetworkMark({
+  network,
+  onBrand = false,
+}: {
+  network: CardNetwork
+  onBrand?: boolean
+}) {
   return (
     <span
-      className={`text-xs font-bold tracking-wide ${NETWORK_STYLES[network]}`}
+      className={
+        onBrand
+          ? 'shrink-0 text-xs font-bold italic tracking-wide text-white/90'
+          : `text-xs font-bold tracking-wide ${NETWORK_STYLES[network]}`
+      }
     >
       {NETWORK_LABELS[network]}
     </span>

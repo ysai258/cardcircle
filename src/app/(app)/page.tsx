@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { SmartLink } from '@/components/SmartLink'
+import { bankGradient, bankInitials } from '@/lib/bank-theme'
 import { redirect } from 'next/navigation'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getCurrentUser } from '@/server/modules/auth/session'
@@ -23,7 +25,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-xl font-semibold text-ink">Available cards</h1>
+        <h1 className="text-2xl font-semibold text-ink">Available cards</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {totalCards > 0
             ? `${totalCards} card${totalCards === 1 ? '' : 's'} your circle has made discoverable, across ${banks.length} bank${banks.length === 1 ? '' : 's'}.`
@@ -48,18 +50,30 @@ export default async function HomePage() {
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {banks.map((bank) => (
             <li key={bank.id}>
-              <Link
+              <SmartLink
                 href={`/banks/${bank.id}`}
-                className="flex items-center justify-between gap-3 rounded-(--radius-card) border border-border-subtle bg-surface-raised p-4 shadow-card transition-colors hover:border-border-strong hover:bg-surface-sunken"
+                className="group flex items-center gap-3 overflow-hidden rounded-(--radius-card) border border-border-subtle bg-surface-raised p-3 shadow-card transition-all hover:-translate-y-0.5 hover:border-border-strong hover:shadow-raised"
               >
-                <div className="min-w-0">
+                {/* The issuer's colour, so a bank is recognisable before
+                    its name is read. */}
+                <span
+                  aria-hidden="true"
+                  className="grid size-11 shrink-0 place-items-center rounded-xl text-[11px] font-bold tracking-wide text-white"
+                  style={{ background: bankGradient(bank.code) }}
+                >
+                  {bankInitials(bank.code, bank.name)}
+                </span>
+
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-semibold text-ink">
                     {bank.name}
                   </p>
                   <p className="mt-0.5 text-xs text-ink-muted">
-                    {bank.cardCount} card{bank.cardCount === 1 ? '' : 's'}
+                    {bank.cardCount} card{bank.cardCount === 1 ? '' : 's'}{' '}
+                    available
                   </p>
                 </div>
+
                 <svg
                   viewBox="0 0 20 20"
                   fill="none"
@@ -68,11 +82,11 @@ export default async function HomePage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  className="size-4 shrink-0 text-ink-faint"
+                  className="size-4 shrink-0 text-ink-faint transition-transform group-hover:translate-x-0.5"
                 >
                   <path d="M7.5 4l6 6-6 6" />
                 </svg>
-              </Link>
+              </SmartLink>
             </li>
           ))}
         </ul>

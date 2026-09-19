@@ -18,7 +18,7 @@ export default async function ProfilePage() {
   // toMeDTO returns the MASKED number, never the decrypted one.
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-xl font-semibold text-ink">Profile</h1>
+      <h1 className="text-2xl font-semibold text-ink">Profile</h1>
       <ProfileSettings me={toMeDTO(user)} />
       <AccountSecurity remainingCodes={remainingCodes} />
     </div>

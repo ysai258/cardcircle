@@ -2,8 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { cardTypeLabel, NetworkMark } from '@/components/NetworkMark'
-import { VisibilityBadge } from '@/components/CardTile'
+import { CardTile, VisibilityBadge } from '@/components/CardTile'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog, Dialog } from '@/components/ui/Dialog'
 import { SelectField } from '@/components/ui/Field'
@@ -87,58 +86,37 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
             <h2 className="text-sm font-semibold text-ink-muted">
               {group.name}
             </h2>
-            <ul className="mt-3 space-y-3">
+            <ul className="mt-3 grid gap-4 sm:grid-cols-2">
               {group.cards.map((card) => (
-                <li
-                  key={card.id}
-                  className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-4 shadow-card"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-ink">
-                        {card.nickname}
-                      </p>
-                      {card.variant && (
-                        <p className="text-xs text-ink-muted">{card.variant}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <NetworkMark network={card.network} />
-                      <VisibilityBadge discoverability={card.discoverability} />
-                    </div>
-                  </div>
+                <li key={card.id} className="space-y-2">
+                  {/* The same card face used everywhere else, so a card
+                      looks the same in My Cards as in discovery. */}
+                  <CardTile card={card} ownerLabel={false} />
 
-                  <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-muted">
-                    <span>{cardTypeLabel(card.cardType)}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="numeric">BIN {card.bin}</span>
-                    <span aria-hidden="true">·</span>
-                    <span className="numeric">
-                      <span aria-hidden="true">•••• {card.last4}</span>
-                      <span className="sr-only">ending {card.last4}</span>
-                    </span>
+                  <div className="flex flex-wrap items-center gap-2 px-0.5">
+                    <VisibilityBadge discoverability={card.discoverability} />
                     {card.expiry && (
-                      <>
-                        <span aria-hidden="true">·</span>
-                        <span className="numeric">Expires {card.expiry}</span>
+                      <span className="numeric text-xs text-ink-muted">
+                        Expires {card.expiry}
                         <span className="text-ink-faint">
+                          {' '}
                           (
                           {card.sharing.expiry === 'friends'
-                            ? 'shared with friends'
+                            ? 'shared'
                             : 'not shared'}
                           )
                         </span>
-                      </>
+                      </span>
                     )}
-                  </div>
 
-                  <div className="mt-4 flex flex-wrap gap-2">
+                    <span className="flex-1" />
+
                     <Button
                       size="sm"
                       variant="secondary"
                       onClick={() => setSharingCard(card)}
                     >
-                      Sharing settings
+                      Sharing
                     </Button>
                     <Button
                       size="sm"

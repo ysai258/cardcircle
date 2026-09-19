@@ -66,3 +66,41 @@ export const paginationSchema = z.object({
 })
 
 export type Pagination = z.infer<typeof paginationSchema>
+
+/**
+ * Indian mobile number: exactly ten digits.
+ *
+ * Accepts the shapes people actually paste — `+91 98765 43210`,
+ * `09876543210`, `98765-43210` — by stripping separators and a country or
+ * trunk prefix first, then insisting on exactly ten digits beginning 6-9,
+ * which is the range India assigns to mobiles.
+ *
+ * The transform outputs the bare ten digits; normalizePhone() turns that
+ * into E.164 for hashing and storage.
+ */
+export const TEN_DIGIT_MOBILE = /^[6-9]\d{9}$/
+
+export function extractMobileDigits(input: string): string {
+  const digits = input.replace(/\D/g, '')
+
+  // +91XXXXXXXXXX or 91XXXXXXXXXX
+  if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2)
+  // 0XXXXXXXXXX
+  if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1)
+
+  return digits
+}
+
+export const mobileNumberSchema = z
+  .string()
+  .trim()
+  .min(1, 'Enter your mobile number')
+  .transform(extractMobileDigits)
+  .refine(
+    (digits) => digits.length === 10,
+    'Mobile number must be exactly 10 digits',
+  )
+  .refine(
+    (digits) => TEN_DIGIT_MOBILE.test(digits),
+    'Indian mobile numbers start with 6, 7, 8 or 9',
+  )

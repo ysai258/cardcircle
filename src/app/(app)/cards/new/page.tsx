@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AddCardPage() {
   const bankRows = await db
-    .select({ id: banks.id, name: banks.name })
+    .select({ id: banks.id, name: banks.name, code: banks.code })
     .from(banks)
     .where(eq(banks.isActive, true))
     .orderBy(asc(banks.name))

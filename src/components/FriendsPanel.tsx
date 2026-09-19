@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { SmartLink } from '@/components/SmartLink'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
@@ -213,12 +214,12 @@ export function FriendsPanel({
                 key={friend.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius-card) border border-border-subtle bg-surface-raised px-4 py-3 shadow-card"
               >
-                <Link
+                <SmartLink
                   href={`/users/${friend.id}`}
                   className="text-sm font-medium text-ink hover:underline"
                 >
                   {friend.name}
-                </Link>
+                </SmartLink>
                 <div className="flex gap-2">
                   <Button
                     size="sm"

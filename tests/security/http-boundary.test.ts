@@ -52,7 +52,7 @@ describe('Validation errors reach the client as usable 400s', () => {
     expect(body.error.code).toBe('VALIDATION_FAILED')
 
     const passwordError = body.error.details?.find((d) => d.field === 'password')
-    expect(passwordError?.messages[0]).toMatch(/at least 10 characters/i)
+    expect(passwordError?.messages[0]).toMatch(/at least 8 characters/i)
   })
 
   it('reports several bad fields at once', async () => {

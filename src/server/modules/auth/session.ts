@@ -1,8 +1,8 @@
 import 'server-only'
-import { and, eq, gt, isNull } from 'drizzle-orm'
+import { and, eq, gt, isNull, sql } from 'drizzle-orm'
 import { cookies } from 'next/headers'
 import { db } from '@/db'
-import { sessions, users, type UserRow } from '@/db/schema'
+import { friendships, sessions, users, type UserRow } from '@/db/schema'
 import { isProduction } from '@/env'
 import { generateToken, hashToken } from '@/server/crypto/tokens'
 
@@ -90,6 +90,51 @@ export async function getCurrentSession(): Promise<AuthenticatedSession | null> 
 
 export async function getCurrentUser(): Promise<UserRow | null> {
   return (await getCurrentSession())?.user ?? null
+}
+
+/**
+ * The authenticated layout's data, in ONE round trip.
+ *
+ * The layout needs the signed-in user and the pending-request count, and it
+ * runs on every page render. Two separate queries meant two round trips to
+ * the database for every single request — which is barely noticeable against
+ * a warm database and very noticeable against a suspended one, where each
+ * round trip pays part of the wake-up cost.
+ */
+export async function getCurrentSessionWithBadge(): Promise<
+  { user: UserRow; pendingRequests: number } | null
+> {
+  const cookieStore = await cookies()
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value
+
+  if (!token) return null
+
+  const pendingRequests = sql<number>`(
+    SELECT count(*)::int
+    FROM ${friendships} AS f
+    INNER JOIN ${users} AS requester ON requester.id = f.requester_id
+    WHERE f.recipient_id = ${users.id}
+      AND f.status = 'pending'
+      AND requester.status = 'active'
+  )`
+
+  const [row] = await db
+    .select({ user: users, pendingRequests })
+    .from(sessions)
+    .innerJoin(users, eq(users.id, sessions.userId))
+    .where(
+      and(
+        eq(sessions.tokenSha256, hashToken(token)),
+        isNull(sessions.revokedAt),
+        gt(sessions.expiresAt, new Date()),
+        eq(users.status, 'active'),
+      ),
+    )
+    .limit(1)
+
+  if (!row) return null
+
+  return { user: row.user, pendingRequests: Number(row.pendingRequests) }
 }
 
 export async function destroyCurrentSession(): Promise<void> {

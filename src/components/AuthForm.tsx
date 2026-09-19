@@ -4,46 +4,65 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { RecoveryCodes } from '@/components/RecoveryCodes'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
-import { RecoveryCodes } from '@/components/RecoveryCodes'
 import { apiFetch, ApiError, fieldError } from '@/lib/api'
+import {
+  extractMobileDigits,
+  passwordStrength,
+  validateMobile,
+  validatePassword,
+} from '@/lib/form-validation'
 
 /**
  * Sign-in and sign-up.
  *
- * One component for both because the fields and failure handling are nearly
- * identical; the differences are a single extra field and the endpoint.
+ * Validation runs as the user types, but only after they have left a field
+ * or attempted to submit — flagging "8 more characters needed" on the first
+ * keystroke is noise, not help. Every rule here is re-checked server-side.
  */
 export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter()
+  const isRegister = mode === 'register'
+
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<unknown>(null)
-  /**
-   * Codes are held in component state only, never persisted anywhere. The
-   * user is already signed in at this point; this screen sits between
-   * registration and the app so the codes cannot be skipped past silently.
-   */
   const [newCodes, setNewCodes] = useState<string[] | null>(null)
 
-  const isRegister = mode === 'register'
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
+  const [touched, setTouched] = useState<Record<string, boolean>>({})
+
+  const phoneIssue = validateMobile(phone)
+  // On sign-in any password may be correct; only sign-up enforces a floor.
+  const passwordIssue = isRegister ? validatePassword(password) : undefined
+  const nameIssue =
+    isRegister && name.trim().length === 0 ? 'Enter your name' : undefined
+
+  const show = (field: string): boolean => touched[field] === true
+  const markTouched = (field: string) =>
+    setTouched((current) => ({ ...current, [field]: true }))
+
+  const strength = passwordStrength(password)
+  const canSubmit = !phoneIssue && !passwordIssue && !nameIssue
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+
+    if (!canSubmit) {
+      // Reveal every problem at once rather than one per attempt.
+      setTouched({ name: true, phone: true, password: true })
+      return
+    }
+
     setPending(true)
     setError(null)
 
-    const form = new FormData(event.currentTarget)
     const payload = isRegister
-      ? {
-          name: String(form.get('name') ?? ''),
-          phone: String(form.get('phone') ?? ''),
-          password: String(form.get('password') ?? ''),
-        }
-      : {
-          phone: String(form.get('phone') ?? ''),
-          password: String(form.get('password') ?? ''),
-        }
+      ? { name: name.trim(), phone, password }
+      : { phone, password }
 
     try {
       const result = await apiFetch<{ id: string; recoveryCodes?: string[] }>(
@@ -65,15 +84,10 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     }
   }
 
-  const generalError =
-    error instanceof ApiError && !error.details ? error.message : null
-
   if (newCodes) {
     return (
       <div className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-6 shadow-card">
-        <h2 className="text-base font-semibold text-ink">
-          Your recovery codes
-        </h2>
+        <h2 className="text-lg font-semibold text-ink">Your recovery codes</h2>
         <p className="mt-1 mb-5 text-sm text-ink-muted">
           Your account is ready. One last thing.
         </p>
@@ -89,21 +103,35 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
     )
   }
 
+  const generalError =
+    error instanceof ApiError && !error.details ? error.message : null
+
+  const digits = extractMobileDigits(phone)
+
   return (
     <div className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-6 shadow-card">
-      <h2 className="text-base font-semibold text-ink">
-        {isRegister ? 'Create your account' : 'Sign in'}
+      <h2 className="text-lg font-semibold text-ink">
+        {isRegister ? 'Create your account' : 'Welcome back'}
       </h2>
+      <p className="mt-1 text-sm text-ink-muted">
+        {isRegister
+          ? 'Your mobile number is how friends find you.'
+          : 'Sign in to see who has the card you need.'}
+      </p>
 
-      <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
         {isRegister && (
           <TextField
             label="Name"
             name="name"
             autoComplete="name"
-            required
             placeholder="Alice"
-            error={fieldError(error, 'name')}
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            onBlur={() => markTouched('name')}
+            error={
+              (show('name') ? nameIssue : undefined) ?? fieldError(error, 'name')
+            }
           />
         )}
 
@@ -111,27 +139,66 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           label="Mobile number"
           name="phone"
           type="tel"
-          inputMode="tel"
+          inputMode="numeric"
           autoComplete="tel"
-          required
           placeholder="98765 43210"
+          className="numeric"
+          value={phone}
+          onChange={(event) => setPhone(event.target.value)}
+          onBlur={() => markTouched('phone')}
           hint={
             isRegister
-              ? 'Friends find you by this number. It is never shown to anyone unless you choose to share it.'
+              ? `10 digits · ${digits.length}/10 entered`
               : undefined
           }
-          error={fieldError(error, 'phone')}
+          error={
+            (show('phone') ? phoneIssue : undefined) ??
+            fieldError(error, 'phone')
+          }
         />
 
-        <TextField
-          label="Password"
-          name="password"
-          type="password"
-          autoComplete={isRegister ? 'new-password' : 'current-password'}
-          required
-          hint={isRegister ? 'At least 10 characters.' : undefined}
-          error={fieldError(error, 'password')}
-        />
+        <div>
+          <TextField
+            label="Password"
+            name="password"
+            type="password"
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            onBlur={() => markTouched('password')}
+            hint={isRegister ? 'At least 8 characters.' : undefined}
+            error={
+              (show('password') ? passwordIssue : undefined) ??
+              fieldError(error, 'password')
+            }
+          />
+
+          {isRegister && password.length > 0 && !passwordIssue && (
+            <div className="mt-2 flex items-center gap-2">
+              <div
+                className="flex h-1 flex-1 gap-1"
+                role="img"
+                aria-label={`Password strength: ${strength.label}`}
+              >
+                {[1, 2, 3].map((level) => (
+                  <span
+                    key={level}
+                    className={`h-full flex-1 rounded-full transition-colors ${
+                      level <= strength.score
+                        ? strength.score === 3
+                          ? 'bg-success'
+                          : strength.score === 2
+                            ? 'bg-accent'
+                            : 'bg-warning'
+                        : 'bg-border-subtle'
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-xs text-ink-muted">{strength.label}</span>
+            </div>
+          )}
+        </div>
 
         {generalError && (
           <p
@@ -151,14 +218,14 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         <p className="mt-4 text-center text-sm">
           <Link
             href="/reset-password"
-            className="text-ink-muted hover:text-ink hover:underline"
+            className="text-ink-muted transition-colors hover:text-ink hover:underline"
           >
             Forgot your password?
           </Link>
         </p>
       )}
 
-      <p className="mt-5 text-center text-sm text-ink-muted">
+      <p className="mt-5 border-t border-border-subtle pt-5 text-center text-sm text-ink-muted">
         {isRegister ? 'Already have an account? ' : "Don't have an account? "}
         <Link
           href={isRegister ? '/login' : '/register'}

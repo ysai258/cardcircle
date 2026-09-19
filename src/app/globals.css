@@ -13,18 +13,23 @@
 :root {
   --surface: #ffffff;
   --surface-raised: #ffffff;
-  --surface-sunken: #f6f7f9;
-  --border-subtle: #e4e7ec;
-  --border-strong: #d0d5dd;
+  --surface-sunken: #f4f5f9;
+  --border-subtle: #e6e8f0;
+  --border-strong: #cfd4e4;
 
-  --ink: #0c111d;
-  --ink-muted: #475467;
-  --ink-faint: #98a2b3;
+  --ink: #0b1020;
+  --ink-muted: #4a5578;
+  --ink-faint: #97a0bd;
 
   --accent: #4f46e5;
   --accent-hover: #4338ca;
-  --accent-soft: #eef2ff;
+  --accent-soft: #eef0ff;
   --accent-ink: #ffffff;
+
+  /* A faint wash behind the page so large empty areas are not flat white. */
+  --page-wash:
+    radial-gradient(900px 400px at 12% -10%, rgba(79, 70, 229, 0.07), transparent 60%),
+    radial-gradient(700px 360px at 92% 0%, rgba(139, 92, 246, 0.06), transparent 62%);
 
   --success: #067647;
   --success-soft: #ecfdf3;
@@ -39,20 +44,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: #0c111d;
-    --surface-raised: #161b26;
-    --surface-sunken: #090d14;
-    --border-subtle: #1f242f;
-    --border-strong: #333741;
+    --surface: #0a0e1a;
+    --surface-raised: #141a2a;
+    --surface-sunken: #070a12;
+    --border-subtle: #1e2536;
+    --border-strong: #2f3850;
 
-    --ink: #f5f6f7;
-    --ink-muted: #94979c;
-    --ink-faint: #61656c;
+    --ink: #f2f4f9;
+    --ink-muted: #9aa3bd;
+    --ink-faint: #616b85;
 
-    --accent: #6366f1;
-    --accent-hover: #818cf8;
-    --accent-soft: #1e1b3a;
+    --accent: #7c7cf7;
+    --accent-hover: #9a9afb;
+    --accent-soft: #1c1d3d;
     --accent-ink: #ffffff;
+
+    --page-wash:
+      radial-gradient(900px 400px at 12% -10%, rgba(124, 124, 247, 0.13), transparent 60%),
+      radial-gradient(700px 360px at 92% 0%, rgba(167, 139, 250, 0.09), transparent 62%);
 
     --success: #75e0a7;
     --success-soft: #0a2822;
@@ -99,10 +108,17 @@
 }
 
 body {
-  background: var(--surface-sunken);
+  background: var(--page-wash), var(--surface-sunken);
+  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Headings get tighter tracking so the app reads less like a document. */
+h1,
+h2 {
+  letter-spacing: -0.018em;
 }
 
 /* Visible focus for keyboard users, suppressed for mouse clicks. */

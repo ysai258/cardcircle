@@ -1,12 +1,13 @@
 import { z } from 'zod'
 import { jsonResponse } from '@/server/common/http'
+import { mobileNumberSchema } from '@/server/common/validation'
 import { authedRoute } from '@/server/common/route'
 import { searchUserByPhone } from '@/server/modules/users/service'
 
 export const dynamic = 'force-dynamic'
 
 const searchSchema = z.strictObject({
-  phone: z.string().trim().min(4).max(20),
+  phone: mobileNumberSchema,
 })
 
 /**

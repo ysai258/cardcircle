@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { SmartLink } from '@/components/SmartLink'
 import { usePathname, useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/api'
 import { cn } from '@/lib/cn'
@@ -42,7 +42,7 @@ export function AppNav({
   return (
     <header className="sticky top-0 z-40 border-b border-border-subtle bg-surface/85 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-4 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 font-semibold text-ink">
+        <SmartLink href="/" className="flex items-center gap-2 font-semibold text-ink">
           <span
             aria-hidden="true"
             className="grid size-7 place-items-center rounded-lg bg-accent text-sm text-accent-ink"
@@ -50,7 +50,7 @@ export function AppNav({
             C
           </span>
           <span className="hidden sm:inline">CardCircle</span>
-        </Link>
+        </SmartLink>
 
         {/*
           min-w-0 is load-bearing: without it this flex child refuses to
@@ -61,7 +61,7 @@ export function AppNav({
           <ul className="flex items-center gap-1 overflow-x-auto">
             {LINKS.map((link) => (
               <li key={link.href}>
-                <Link
+                <SmartLink
                   href={link.href}
                   aria-current={isActive(link.href) ? 'page' : undefined}
                   className={cn(
@@ -78,7 +78,7 @@ export function AppNav({
                       <span className="sr-only"> pending requests</span>
                     </span>
                   )}
-                </Link>
+                </SmartLink>
               </li>
             ))}
           </ul>

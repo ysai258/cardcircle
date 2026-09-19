@@ -1,8 +1,7 @@
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
 import { AppNav } from '@/components/AppNav'
-import { getCurrentUser } from '@/server/modules/auth/session'
-import { countIncomingRequests } from '@/server/modules/friends/service'
+import { getCurrentSessionWithBadge } from '@/server/modules/auth/session'
 
 /**
  * Authenticated shell.
@@ -17,10 +16,10 @@ export default async function AppLayout({
 }: {
   children: ReactNode
 }) {
-  const user = await getCurrentUser()
-  if (!user) redirect('/login')
+  const session = await getCurrentSessionWithBadge()
+  if (!session) redirect('/login')
 
-  const pendingRequests = await countIncomingRequests(user.id)
+  const { user, pendingRequests } = session
 
   return (
     <div className="flex min-h-full flex-col">

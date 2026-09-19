@@ -18,7 +18,7 @@ export default async function FriendsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold text-ink">Friends</h1>
+      <h1 className="text-2xl font-semibold text-ink">Friends</h1>
       <FriendsPanel friends={friends} blocked={blocked} />
     </div>
   )

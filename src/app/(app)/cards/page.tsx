@@ -19,7 +19,7 @@ export default async function MyCardsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-ink">My Cards</h1>
+          <h1 className="text-2xl font-semibold text-ink">My Cards</h1>
           <p className="mt-1 text-sm text-ink-muted">
             {cards.length} card{cards.length === 1 ? '' : 's'} · you control
             what each one shares
