@@ -22,6 +22,15 @@ const envSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
+
+  /**
+   * Shared secret for the scheduled keep-alive request.
+   *
+   * Optional: the cron route refuses to run without it, so a deployment
+   * that has not set one simply has no keep-alive rather than an open
+   * endpoint.
+   */
+  CRON_SECRET: z.string().min(16).optional(),
 })
 
 export type Env = z.infer<typeof envSchema>
