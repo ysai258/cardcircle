@@ -45,4 +45,14 @@ function loadEnv(): Env {
 
 export const env: Env = loadEnv()
 
-export const isProduction = env.NODE_ENV === 'production'
+/**
+ * True in any deployed environment.
+ *
+ * Checks Vercel's own marker as well as NODE_ENV because the session
+ * cookie's `Secure` flag depends on this value. Vercel does set
+ * NODE_ENV=production reliably, but if it were ever missing the cookie would
+ * silently ship without Secure — a failure with no visible symptom. Belt and
+ * braces is cheap for a flag that protects a bearer credential.
+ */
+export const isProduction =
+  env.NODE_ENV === 'production' || process.env.VERCEL === '1'
