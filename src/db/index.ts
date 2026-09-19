@@ -2,6 +2,7 @@ import 'server-only'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
 import { env, isProduction } from '@/env'
+import { normalizeDatabaseUrl } from './connection-url'
 import { schema } from './schema'
 
 /**
@@ -18,7 +19,7 @@ import { schema } from './schema'
  * do not leak a new connection on every edit.
  */
 function createClient() {
-  return postgres(env.DATABASE_URL, {
+  return postgres(normalizeDatabaseUrl(env.DATABASE_URL), {
     max: isProduction ? 1 : 5,
     prepare: false,
     idle_timeout: 20,

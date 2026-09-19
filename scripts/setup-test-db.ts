@@ -11,6 +11,7 @@ import './load-env'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
+import { normalizeDatabaseUrl } from '../src/db/connection-url'
 
 const TEST_DATABASE = 'cardcircle_test'
 
@@ -39,7 +40,10 @@ async function main(): Promise<void> {
     await admin.end()
   }
 
-  const client = postgres(testUrl.toString(), { max: 1, onnotice: () => {} })
+  const client = postgres(normalizeDatabaseUrl(testUrl.toString()), {
+    max: 1,
+    onnotice: () => {},
+  })
   try {
     await migrate(drizzle(client), { migrationsFolder: './src/db/migrations' })
     console.log(`${TEST_DATABASE} is up to date.`)
