@@ -103,7 +103,9 @@ export function AddCardForm({ banks }: { banks: Bank[] }) {
 <Combobox
           label="Bank"
           name="bankId"
-          placeholder="Type to search 25 banks…"
+          // Derived, not hardcoded: a literal count silently goes stale
+          // the moment a bank is added, as it did when CSB arrived.
+          placeholder={`Type to search ${banks.length} banks…`}
           hint="Start typing — “sbi”, “kotak”, “amex” all work."
           error={fieldError(error, 'bankId') ?? bankIssue}
           onChange={(value) => {
