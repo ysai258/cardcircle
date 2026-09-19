@@ -25,6 +25,16 @@
  */
 const CLIENT_ONLY_PARAMS = [
   'channel_binding',
+  // Supabase's pooled (Supavisor) connection string carries this. It tells
+  // a CLIENT that it is talking to a pooler; Postgres has no such setting
+  // and rejects the connection outright. Same failure shape as
+  // channel_binding, found by testing before a provider switch rather than
+  // after one.
+  'pgbouncer',
+  'pool_timeout',
+  'connection_limit',
+  'statement_cache_size',
+  'options',
   'sslcert',
   'sslkey',
   'sslrootcert',

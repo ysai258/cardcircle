@@ -36,6 +36,18 @@ describe('normalizeDatabaseUrl', () => {
     expect(normalizeDatabaseUrl(url)).toBe(url)
   })
 
+  it('strips pgbouncer from a Supabase pooled connection string', () => {
+    const supabase =
+      'postgresql://postgres.abc:pw@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true'
+
+    const result = normalizeDatabaseUrl(supabase)
+
+    // Postgres rejects the connection outright if this reaches it.
+    expect(result).not.toContain('pgbouncer')
+    expect(result).toContain('pooler.supabase.com:6543')
+    expect(result).toContain('postgres.abc:pw@')
+  })
+
   it('returns unparseable input unchanged rather than throwing', () => {
     expect(normalizeDatabaseUrl('not a url')).toBe('not a url')
   })
