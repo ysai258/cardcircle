@@ -34,17 +34,6 @@ import { encrypt } from '../src/server/crypto/aead'
 /** Every seeded account uses this password. Development only. */
 const DEV_PASSWORD = 'cardcircle-dev-2026'
 
-const BANKS = [
-  { name: 'HDFC Bank', code: 'HDFC' },
-  { name: 'State Bank of India', code: 'SBI' },
-  { name: 'ICICI Bank', code: 'ICICI' },
-  { name: 'Axis Bank', code: 'AXIS' },
-  { name: 'Kotak Mahindra Bank', code: 'KOTAK' },
-  { name: 'IDFC FIRST Bank', code: 'IDFC' },
-  { name: 'RBL Bank', code: 'RBL' },
-  { name: 'IndusInd Bank', code: 'INDUSIND' },
-  { name: 'American Express', code: 'AMEX' },
-]
 
 const PEOPLE = [
   { key: 'alice', name: 'Alice', phone: '9000000001' },
@@ -243,16 +232,30 @@ async function main(): Promise<void> {
   const db = drizzle(client)
 
   try {
-    console.log('Clearing existing data...')
+    // `banks` is deliberately absent: it is reference data owned by
+    // migration 0001, not fixture data. Truncating it here would leave a
+    // freshly seeded developer database inconsistent with production.
+    console.log('Clearing existing user data...')
     await db.execute(
       sql`TRUNCATE TABLE audit_logs, reports, blocks, friendships,
-          card_sharing_settings, cards, sessions, users, banks, rate_limits
+          card_sharing_settings, cards, sessions, users, rate_limits
           RESTART IDENTITY CASCADE`,
     )
 
-    console.log('Seeding banks...')
-    const bankRows = await db.insert(banks).values(BANKS).returning()
+    const bankRows = await db.select({ id: banks.id, code: banks.code }).from(banks)
     const bankByCode = new Map(bankRows.map((b) => [b.code, b.id]))
+
+    if (bankByCode.size === 0) {
+      throw new Error(
+        'No banks found. Run `npm run db:migrate` first — banks ship as migration 0001.',
+      )
+    }
+
+    for (const code of new Set(CARDS.map((c) => c.bank))) {
+      if (!bankByCode.has(code)) {
+        throw new Error(`Seed references unknown bank code: ${code}`)
+      }
+    }
 
     console.log('Seeding users...')
     const passwordHash = await hashPassword(DEV_PASSWORD)
