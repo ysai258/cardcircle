@@ -21,7 +21,6 @@ info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m!!\033[0m  %s\n' "$*"; }
 fail() { printf '\033[1;31mxx\033[0m  %s\n' "$*" >&2; exit 1; }
 
-PROD_ENV_FILE=".env.production.local"
 
 # ---------------------------------------------------------------------------
 # 1. Preconditions
@@ -88,23 +87,15 @@ fi
 # ---------------------------------------------------------------------------
 # 4. Migrations
 #
-# Pulled to a dedicated file, NOT .env.local — that one holds the local
-# development database, and overwriting it would silently point development
-# at production.
+# Migrations are NOT run from here. Vercel stores DATABASE_URL as a Secret,
+# so `vercel env pull` returns "[SENSITIVE]" rather than the value and this
+# machine cannot reach the production database at all.
+#
+# Instead `npm run build` runs them, inside the Vercel build, where the real
+# value exists. Drizzle records what it has applied, so repeat builds are a
+# no-op. A failed migration fails the deploy, which is the behaviour we want.
 # ---------------------------------------------------------------------------
-info "Pulling production environment..."
-vercel env pull "$PROD_ENV_FILE" --environment=production --yes >/dev/null 2>&1 \
-  || fail "Could not pull the production environment."
-
-grep -q "^DATABASE_URL=" "$PROD_ENV_FILE" || fail "DATABASE_URL missing from the pulled environment."
-
-if ! grep -E "^DATABASE_URL=" "$PROD_ENV_FILE" | grep -q -- "-pooler"; then
-  warn "The production DATABASE_URL has no '-pooler' in its host."
-  warn "Serverless functions may exhaust a direct Postgres endpoint."
-fi
-
-info "Applying migrations to production..."
-ENV_FILE="$PROD_ENV_FILE" npx tsx scripts/migrate.ts
+info "Migrations run inside the Vercel build (DATABASE_URL is a Secret here)."
 
 # ---------------------------------------------------------------------------
 # 5. Deploy
