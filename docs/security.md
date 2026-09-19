@@ -311,7 +311,44 @@ no change to the authorisation model.
 
 ---
 
-## 9. What the tests cover
+## 9. Account recovery and erasure
+
+**Recovery codes.** Eight are issued inside the same transaction that creates
+the account — an account must never exist without them, or a crash between
+the two writes would produce exactly the permanent lockout they prevent.
+
+Each code is 12 characters from a 32-symbol alphabet (60 bits), drawn with
+`randomInt()`, which is cryptographically secure and rejection-samples so the
+distribution stays uniform. The alphabet omits I, L, O and U: codes get read
+off paper and typed by hand, so misreadable characters cost more than the
+handful of bits they add.
+
+Only SHA-256 of each code is stored — a code resets a password, so a database
+dump must not yield a working one. A plain hash is correct here for the same
+reason as session tokens: 60 bits of uniform randomness has no dictionary to
+attack.
+
+Codes are strictly single-use. The reset marks the code used and requires it
+to be unused *in the same UPDATE*, so two concurrent requests with one code
+cannot both succeed. A successful reset revokes every live session: if the
+reset happened because the account was compromised, leaving them alive would
+defeat the point.
+
+Every failure — wrong number, wrong code, spent code, disabled account —
+returns a byte-identical message, so the reset page cannot be used to
+discover which numbers are registered. It is rate limited to 5/hour per IP
+and per number.
+
+**Erasure.** Deleting an account requires the password again, not just a live
+session: the action is irreversible and an unattended laptop should not be
+enough. The cascade removes cards, sharing settings, friendships, blocks,
+reports, sessions and recovery codes. Audit rows survive with a NULL actor —
+the security trail is kept, stripped of who it referred to, which is what a
+right-to-erasure request actually requires.
+
+---
+
+## 10. What the tests cover
 
 129 tests, all passing.
 
@@ -340,7 +377,7 @@ Explicitly verified against a running server, not just in tests:
 
 ---
 
-## 10. Threats not addressed
+## 11. Threats not addressed
 
 Named honestly rather than left implied.
 

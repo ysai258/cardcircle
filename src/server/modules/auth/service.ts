@@ -7,6 +7,7 @@ import { enforceRateLimit } from '@/server/common/rate-limit'
 import { hashPassword, verifyPassword } from '@/server/crypto/password'
 import { encryptPhone, normalizePhone, phoneHmac } from '@/server/crypto/phone'
 import { recordAuditEvent } from '@/server/modules/audit/service'
+import { issueRecoveryCodes } from './recovery'
 import { createSession, destroyCurrentSession } from './session'
 import type { LoginInput, RegisterInput } from './validation'
 
@@ -36,54 +37,77 @@ const CREDENTIALS_REJECTED = 'Incorrect mobile number or password'
 const DUMMY_HASH =
   '$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$Zm9vYmFyYmF6cXV4Zm9vYmFyYmF6cXV4Zm9vYmFy'
 
+/**
+ * Detects a Postgres unique-violation (SQLSTATE 23505).
+ *
+ * Walks the `cause` chain rather than reading `error.code` directly: Drizzle
+ * wraps failures from inside a transaction in a DrizzleQueryError and hangs
+ * the real PostgresError off `cause`. Checking only the top-level code meant
+ * a duplicate phone number escaped this branch and surfaced as a 500, so
+ * anyone re-registering an existing number was told "Internal server error"
+ * instead of "an account already exists".
+ */
+function isUniqueViolation(error: unknown): boolean {
+  let current: unknown = error
+
+  for (let depth = 0; current !== null && depth < 5; depth += 1) {
+    if (typeof current !== 'object') return false
+    if ((current as { code?: string }).code === '23505') return true
+    current = (current as { cause?: unknown }).cause
+  }
+
+  return false
+}
+
 export async function register(
   input: RegisterInput,
   clientId: string,
-): Promise<{ userId: string }> {
+): Promise<{ userId: string; recoveryCodes: string[] }> {
   await enforceRateLimit('register', clientId)
 
   const phone = normalizePhone(input.phone)
   if (!phone) {
-    throw validationFailed('Enter a valid mobile number', {
-      phone: ['Enter a valid mobile number'],
-    })
+    throw validationFailed('Enter a valid mobile number', [
+      { field: 'phone', messages: ['Enter a valid mobile number'] },
+    ])
   }
 
   const passwordHash = await hashPassword(input.password)
 
   try {
-    const [created] = await db
-      .insert(users)
-      .values({
-        name: input.name,
-        phoneHmac: phoneHmac(phone.e164),
-        phoneCt: encryptPhone(phone.e164),
-        phoneCountryCode: phone.countryCode,
-        phoneLast4: phone.last4,
-        passwordHash,
-        // phoneVerifiedAt stays NULL: nothing has verified this number.
-      })
-      .returning({ id: users.id })
+    // One transaction: an account must never exist without recovery codes,
+    // or a crash between the two writes would create exactly the permanent
+    // lockout the codes exist to prevent.
+    const { userId, codes } = await db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(users)
+        .values({
+          name: input.name,
+          phoneHmac: phoneHmac(phone.e164),
+          phoneCt: encryptPhone(phone.e164),
+          phoneCountryCode: phone.countryCode,
+          phoneLast4: phone.last4,
+          passwordHash,
+          // phoneVerifiedAt stays NULL: nothing has verified this number.
+        })
+        .returning({ id: users.id })
 
-    if (!created) throw new Error('User insert returned no row')
+      if (!created) throw new Error('User insert returned no row')
+
+      return { userId: created.id, codes: await issueRecoveryCodes(created.id, tx) }
+    })
 
     await recordAuditEvent({
       action: 'user_registered',
-      actorUserId: created.id,
+      actorUserId: userId,
       resourceType: 'user',
-      resourceId: created.id,
+      resourceId: userId,
     })
 
-    await createSession(created.id)
-    return { userId: created.id }
+    await createSession(userId)
+    return { userId, recoveryCodes: codes }
   } catch (error) {
-    // 23505 = unique_violation on users_phone_hmac_unique.
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'code' in error &&
-      (error as { code?: string }).code === '23505'
-    ) {
+    if (isUniqueViolation(error)) {
       throw new AppError(
         ERROR_CODES.CONFLICT,
         'An account already exists for that mobile number',

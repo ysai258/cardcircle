@@ -2,7 +2,7 @@ import 'server-only'
 import { randomUUID } from 'node:crypto'
 import { ZodError } from 'zod'
 import { isProduction } from '@/env'
-import { AppError, ERROR_CODES } from './errors'
+import { AppError, ERROR_CODES, type FieldError } from './errors'
 import { logger } from './logger'
 import { findForbiddenKeys } from './redact'
 
@@ -64,11 +64,19 @@ export function errorResponse(
   }
 
   if (error instanceof ZodError) {
-    const details: Record<string, string[]> = {}
+    // Grouped into a list rather than an object keyed by field name — see
+    // the FieldError docblock in ./errors.ts for why that matters.
+    const byField = new Map<string, string[]>()
     for (const issue of error.issues) {
-      const key = issue.path.join('.') || '_'
-      ;(details[key] ??= []).push(issue.message)
+      const field = issue.path.join('.') || '_'
+      const messages = byField.get(field) ?? []
+      messages.push(issue.message)
+      byField.set(field, messages)
     }
+    const details: FieldError[] = [...byField].map(([field, messages]) => ({
+      field,
+      messages,
+    }))
     return jsonResponse(
       {
         error: {

@@ -6,6 +6,7 @@ import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { Button } from '@/components/ui/Button'
 import { TextField } from '@/components/ui/Field'
+import { RecoveryCodes } from '@/components/RecoveryCodes'
 import { apiFetch, ApiError, fieldError } from '@/lib/api'
 
 /**
@@ -18,6 +19,12 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
   const router = useRouter()
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<unknown>(null)
+  /**
+   * Codes are held in component state only, never persisted anywhere. The
+   * user is already signed in at this point; this screen sits between
+   * registration and the app so the codes cannot be skipped past silently.
+   */
+  const [newCodes, setNewCodes] = useState<string[] | null>(null)
 
   const isRegister = mode === 'register'
 
@@ -39,10 +46,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
         }
 
     try {
-      await apiFetch(isRegister ? '/api/auth/register' : '/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      })
+      const result = await apiFetch<{ id: string; recoveryCodes?: string[] }>(
+        isRegister ? '/api/auth/register' : '/api/auth/login',
+        { method: 'POST', body: JSON.stringify(payload) },
+      )
+
+      if (isRegister && result.recoveryCodes) {
+        setNewCodes(result.recoveryCodes)
+        return
+      }
+
       router.push('/')
       router.refresh()
     } catch (caught) {
@@ -54,6 +67,27 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
 
   const generalError =
     error instanceof ApiError && !error.details ? error.message : null
+
+  if (newCodes) {
+    return (
+      <div className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-6 shadow-card">
+        <h2 className="text-base font-semibold text-ink">
+          Your recovery codes
+        </h2>
+        <p className="mt-1 mb-5 text-sm text-ink-muted">
+          Your account is ready. One last thing.
+        </p>
+        <RecoveryCodes
+          codes={newCodes}
+          acknowledgeLabel="Continue to CardCircle"
+          onAcknowledge={() => {
+            router.push('/')
+            router.refresh()
+          }}
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="rounded-(--radius-card) border border-border-subtle bg-surface-raised p-6 shadow-card">
@@ -112,6 +146,17 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           {isRegister ? 'Create account' : 'Sign in'}
         </Button>
       </form>
+
+      {!isRegister && (
+        <p className="mt-4 text-center text-sm">
+          <Link
+            href="/reset-password"
+            className="text-ink-muted hover:text-ink hover:underline"
+          >
+            Forgot your password?
+          </Link>
+        </p>
+      )}
 
       <p className="mt-5 text-center text-sm text-ink-muted">
         {isRegister ? 'Already have an account? ' : "Don't have an account? "}

@@ -31,6 +31,9 @@ export type RateLimitRule = {
  */
 export const RATE_LIMITS = {
   login: { limit: 10, windowSeconds: 15 * 60 },
+  // Tighter than login: a recovery code is ~60 bits, so this is not about
+  // guessing it but about making an attacker's attempts visible and slow.
+  passwordReset: { limit: 5, windowSeconds: 60 * 60 },
   register: { limit: 5, windowSeconds: 60 * 60 },
   userSearch: { limit: 20, windowSeconds: 60 * 60 },
   friendRequest: { limit: 20, windowSeconds: 24 * 60 * 60 },

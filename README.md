@@ -141,6 +141,13 @@ the JSON. The frontend does no hiding, because it never receives the value.
 **404, never 403.** A blocked user, a private card, and a card that does not
 exist return byte-identical responses. A 403 would confirm the card is real.
 
+**Recovery and erasure.** Eight single-use recovery codes are issued at
+sign-up and stored only as SHA-256. Using one resets the password and revokes
+every live session. Deleting an account requires the password again — a live
+session is too weak a confirmation for something irreversible — and cascades
+to cards, friendships, blocks, sessions and codes, leaving audit rows with a
+NULL actor.
+
 ---
 
 ## Deployment
@@ -173,6 +180,13 @@ registering a number they do not own. Mitigations: exact-match-only lookup, a
 20/hour rate limit, an audit record per search, and an "unverified" badge
 wherever a number is shown. The `phone_verified_at` column exists and is
 always `NULL`, so verification can be added without a migration.
+
+**Account recovery depends on the user keeping their codes.** With no email
+or SMS there is nothing to send a reset link to, so recovery rests on eight
+single-use codes issued at sign-up. Lose the password *and* the codes and the
+account genuinely cannot be recovered — CardCircle has no way to verify who
+you are. The reset page says so plainly rather than implying support can
+help.
 
 **The encryption key lives in an environment variable, not a KMS.** That
 protects against a database dump. It does not protect against someone who can

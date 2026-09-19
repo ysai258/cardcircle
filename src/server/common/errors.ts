@@ -30,17 +30,30 @@ const STATUS_BY_CODE: Record<ErrorCode, number> = {
   INTERNAL: 500,
 }
 
+/**
+ * A validation failure on one field.
+ *
+ * A LIST of {field, messages}, not a Record keyed by field name. That is
+ * deliberate and load-bearing: the response guard rejects any payload
+ * containing a forbidden KEY, and "password" is a perfectly legitimate field
+ * to report an error about. Keyed by field name, a short-password error
+ * produced `details.password`, tripped the guard, and turned a helpful 400
+ * into a 500 — so the commonest signup mistake showed "Internal server
+ * error". Keeping field names in values sidesteps that without weakening the
+ * guard by one inch.
+ */
+export type FieldError = {
+  field: string
+  messages: string[]
+}
+
 export class AppError extends Error {
   readonly code: ErrorCode
   readonly status: number
   /** Field-level detail, safe to return to the client. */
-  readonly details?: Record<string, string[]>
+  readonly details?: FieldError[]
 
-  constructor(
-    code: ErrorCode,
-    message: string,
-    details?: Record<string, string[]>,
-  ) {
+  constructor(code: ErrorCode, message: string, details?: FieldError[]) {
     super(message)
     this.name = 'AppError'
     this.code = code
@@ -65,7 +78,7 @@ export function unauthenticated(): AppError {
 
 export function validationFailed(
   message: string,
-  details?: Record<string, string[]>,
+  details?: FieldError[],
 ): AppError {
   return new AppError(ERROR_CODES.VALIDATION_FAILED, message, details)
 }

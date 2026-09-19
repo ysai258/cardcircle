@@ -43,5 +43,21 @@ export const loginSchema = z.strictObject({
   password: z.string().min(1, 'Enter your password').max(MAX_PASSWORD_LENGTH),
 })
 
+export const resetPasswordSchema = z.strictObject({
+  phone: phoneSchema,
+  /** Accepted in any casing, with or without dashes. */
+  code: z.string().trim().min(8, 'Enter a recovery code').max(32),
+  newPassword: passwordSchema,
+})
+
+export const deleteAccountSchema = z.strictObject({
+  password: z.string().min(1, 'Enter your password').max(MAX_PASSWORD_LENGTH),
+  /** Typed confirmation, so the request cannot be made by accident. */
+  confirm: z.literal('DELETE', {
+    message: 'Type DELETE to confirm',
+  }),
+})
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
 export type RegisterInput = z.infer<typeof registerSchema>
 export type LoginInput = z.infer<typeof loginSchema>

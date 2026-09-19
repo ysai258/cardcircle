@@ -2,8 +2,9 @@ import 'server-only'
 import { and, asc, count, eq } from 'drizzle-orm'
 import { db } from '@/db'
 import { banks, cards, users, type Visibility } from '@/db/schema'
-import { notFound } from '@/server/common/errors'
+import { AppError, ERROR_CODES, notFound } from '@/server/common/errors'
 import { enforceRateLimit } from '@/server/common/rate-limit'
+import { verifyPassword } from '@/server/crypto/password'
 import { decryptPhone, maskPhone, normalizePhone, phoneHmac } from '@/server/crypto/phone'
 import { recordAuditEvent } from '@/server/modules/audit/service'
 import { discoverableByRequester } from '@/server/modules/cards/discovery-predicate'
@@ -215,4 +216,47 @@ export async function updatePhoneVisibility(
     .update(users)
     .set({ phoneVisibility: visibility, updatedAt: new Date() })
     .where(eq(users.id, userId))
+}
+
+/**
+ * Permanently deletes the caller's account.
+ *
+ * Re-authentication is required even though the caller already holds a
+ * session: this is irreversible, and a session alone is too weak a
+ * confirmation for it (an unattended laptop should not be enough).
+ *
+ * The cascade removes cards, sharing settings, friendships, blocks, reports,
+ * sessions and recovery codes. Audit rows survive with a NULL actor — the
+ * security trail is retained, stripped of who it referred to, which is what
+ * a right-to-erasure request actually requires.
+ */
+export async function deleteAccount(
+  userId: string,
+  password: string,
+): Promise<void> {
+  const [user] = await db
+    .select({ id: users.id, passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1)
+
+  if (!user) throw notFound('User')
+
+  if (!(await verifyPassword(user.passwordHash, password))) {
+    throw new AppError(
+      ERROR_CODES.UNAUTHENTICATED,
+      'That password is not correct.',
+    )
+  }
+
+  // Recorded BEFORE the delete: afterwards there is no user row to reference,
+  // and the audit trail should show the account existed and was removed.
+  await recordAuditEvent({
+    action: 'account_deleted',
+    actorUserId: userId,
+    resourceType: 'user',
+    resourceId: userId,
+  })
+
+  await db.delete(users).where(eq(users.id, userId))
 }

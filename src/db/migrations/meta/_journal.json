@@ -15,6 +15,13 @@
       "when": 1789796880680,
       "tag": "0001_seed_banks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789798979728,
+      "tag": "0002_recovery_codes",
+      "breakpoints": true
     }
   ]
 }

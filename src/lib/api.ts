@@ -6,16 +6,21 @@
  * session cookie on requests to this origin and nowhere else.
  */
 
+export type FieldError = {
+  field: string
+  messages: string[]
+}
+
 export class ApiError extends Error {
   readonly code: string
   readonly status: number
-  readonly details?: Record<string, string[]>
+  readonly details?: FieldError[]
 
   constructor(
     code: string,
     message: string,
     status: number,
-    details?: Record<string, string[]>,
+    details?: FieldError[],
   ) {
     super(message)
     this.name = 'ApiError'
@@ -26,7 +31,7 @@ export class ApiError extends Error {
 }
 
 type ErrorBody = {
-  error?: { code?: string; message?: string; details?: Record<string, string[]> }
+  error?: { code?: string; message?: string; details?: FieldError[] }
 }
 
 export async function apiFetch<T>(
@@ -68,5 +73,5 @@ export function fieldError(
   field: string,
 ): string | undefined {
   if (!(error instanceof ApiError)) return undefined
-  return error.details?.[field]?.[0]
+  return error.details?.find((detail) => detail.field === field)?.messages[0]
 }

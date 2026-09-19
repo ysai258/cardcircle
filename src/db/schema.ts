@@ -126,6 +126,9 @@ export const auditActionEnum = pgEnum('audit_action', [
   'user_reported',
   'user_searched',
   'phone_revealed',
+  'recovery_codes_generated',
+  'password_reset',
+  'account_deleted',
 ])
 
 // ---------------------------------------------------------------------------
@@ -378,6 +381,41 @@ export const sessions = pgTable(
 )
 
 /**
+ * Single-use recovery codes.
+ *
+ * This build has no OTP and no email, so there is no channel over which to
+ * send a reset link — which left a forgotten password as a permanent
+ * lockout, fixable only by hand-editing the database.
+ *
+ * Codes are generated once at sign-up, shown once, and never recoverable
+ * afterwards. Only SHA-256 of each is stored: a recovery code is a
+ * credential that resets a password, so a database dump must not yield a
+ * working one. A plain hash is right here (rather than Argon2) because the
+ * codes are ~60 bits of uniform randomness — there is no dictionary to
+ * attack — and the same reasoning as session tokens applies.
+ */
+export const recoveryCodes = pgTable(
+  'recovery_codes',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeSha256: bytea('code_sha256').notNull(),
+    /** Set the moment a code is spent. Codes are strictly single-use. */
+    usedAt: timestamp('used_at', { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (table) => [
+    uniqueIndex('recovery_codes_user_code_unique').on(
+      table.userId,
+      table.codeSha256,
+    ),
+    index('recovery_codes_user_idx').on(table.userId),
+  ],
+)
+
+/**
  * Fixed-window rate limiting.
  *
  * Lives in Postgres because Vercel's serverless functions share no memory —
@@ -427,6 +465,7 @@ export const auditLogs = pgTable(
 /** Login attempt counters live in rate_limits; see src/server/common/rate-limit.ts. */
 export const schema = {
   users,
+  recoveryCodes,
   banks,
   cards,
   cardSharingSettings,
@@ -444,6 +483,7 @@ export type CardRow = typeof cards.$inferSelect
 export type CardSharingRow = typeof cardSharingSettings.$inferSelect
 export type FriendshipRow = typeof friendships.$inferSelect
 export type SessionRow = typeof sessions.$inferSelect
+export type RecoveryCodeRow = typeof recoveryCodes.$inferSelect
 
 export type CardType = (typeof cardTypeEnum.enumValues)[number]
 export type CardNetwork = (typeof cardNetworkEnum.enumValues)[number]
