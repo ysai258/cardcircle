@@ -43,6 +43,13 @@
       "when": 1790335822642,
       "tag": "0005_audit_actions",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790364986509,
+      "tag": "0006_catalogue_corrections",
+      "breakpoints": true
     }
   ]
 }

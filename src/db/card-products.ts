@@ -17,6 +17,15 @@
  * Bank in 2023. The Citi entries remain because cards issued under those
  * names are still in wallets, but they are legacy.
  *
+ * Fintech co-brands are filed under the ISSUING bank, because that is who
+ * issues them — Jupiter's cards are CSB and Federal products. They carry
+ * "(Jupiter)" so the people who hold them can actually find them, since
+ * nobody calls it "an Edge+ CSB Bank card".
+ *
+ * Migration 0006 corrected this list after a user pointed out real cards
+ * that were missing and two CSB entries that never existed. If you add to
+ * it, check the issuer's own page first — this file has been wrong before.
+ *
  * Amex issues no debit cards in India, hence the empty list.
  */
 
@@ -112,7 +121,16 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "SBI Gold International Debit",
       "SBI Platinum International Debit",
       "SBI RuPay NCMC Debit",
-      "SBI Yuva Debit"
+      "SBI Yuva Debit",
+      "SBI IOCL Co-Branded Contactless RuPay Debit Card",
+      "SBI HPCL Co-Branded Debit Card",
+      "SBI Visa Infinite Debit Card",
+      "SBI Mastercard World Debit Card",
+      "SBI Pragati Platinum Debit Card",
+      "SBI Nari Shakti Platinum Debit Card",
+      "SBI My Card International Debit Card",
+      "SBI One Touch Debit Card",
+      "SBI Virtual Debit Card"
     ]
   },
   {
@@ -328,7 +346,8 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "Federal Bank Imperio",
       "Federal Bank Signet",
       "Scapia Federal",
-      "Federal Bank RuPay Signet"
+      "Federal Bank RuPay Signet",
+      "Edge Federal Bank VISA Credit Card (Jupiter)"
     ],
     "debit": [
       "Federal Bank Platinum Debit",
@@ -470,8 +489,9 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
   {
     "bank": "CSB",
     "credit": [
-      "CSB Bank RuPay Credit Card",
-      "CSB Bank Yuva Credit Card"
+      "Edge+ CSB Bank RuPay Credit Card (Jupiter)",
+      "Edge CSB Bank RuPay Credit Card (Jupiter)",
+      "CSB OneCard"
     ],
     "debit": [
       "CSB Classic Debit",
