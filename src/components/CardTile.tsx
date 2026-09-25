@@ -1,22 +1,26 @@
 import { Badge } from '@/components/ui/Badge'
-import { cardTypeLabel, NetworkMark } from '@/components/NetworkMark'
-import { bankGradient, bankInitials, bankTheme } from '@/lib/bank-theme'
+import { BankMark } from '@/components/BankMark'
+import { cardTypeLabel, networkLabel } from '@/components/NetworkMark'
+import { bankGradient, bankTheme } from '@/lib/bank-theme'
 import type { CardSummaryDTO } from '@/server/modules/cards/dto'
 
 /**
  * One card, drawn as a card.
  *
- * The face names the PRODUCT — "Airtel Axis Bank" — because that is what an
- * offer names and therefore what someone is actually looking for.
+ * Every fact gets its own treatment rather than a wall of white text, so the
+ * eye can find "whose is it" and "what kind is it" without reading:
  *
- * The digits line shows the BIN only when the server sent one. A masked card
- * shows the product and network alone, which still answers "who has an
- * Airtel Axis Visa?" without publishing six digits of anyone's card. There
- * is no last-4 and no expiry on the face because those columns no longer
- * exist.
+ *   bank      a solid mark, top-left
+ *   product   the largest thing on the face
+ *   network   an outlined pill, top-right
+ *   digits    a monospace slab, or an explicit "hidden" state
+ *   owner     a chip carrying their initial
+ *   type      a filled pill — amber for credit, teal for debit
  *
- * The background is the issuer's brand colour, never its logo. A colour is
- * decoration; a logo would imply an affiliation we do not have.
+ * There is no last-4 and no expiry, because those columns no longer exist.
+ *
+ * The background is the issuer's brand colour, never its logo unless a real
+ * one is on file. A colour is decoration; a logo is a claim of affiliation.
  */
 export function CardTile({
   card,
@@ -28,77 +32,119 @@ export function CardTile({
   ownerLabel?: boolean
 }) {
   const theme = bankTheme(card.bank.code)
+  const isCredit = card.cardType === 'credit'
 
   const face = (
     <div
-      className="relative flex aspect-[1.62/1] w-full flex-col overflow-hidden rounded-xl p-3.5 shadow-raised transition-transform duration-200 group-hover:-translate-y-0.5"
+      className="relative flex aspect-[1.6/1] w-full flex-col overflow-hidden rounded-2xl border-2 border-black/10 p-3.5 shadow-card transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-raised"
       style={{ background: bankGradient(card.bank.code), color: theme.ink }}
     >
-      {/* Soft highlight so flat gradients read as a physical surface. */}
+      {/* Gloss, so a flat gradient reads as a physical surface. */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-10 -top-16 size-44 rounded-full opacity-20"
+        className="pointer-events-none absolute -right-8 -top-20 size-48 rounded-full opacity-25"
         style={{ background: 'radial-gradient(circle, #fff 0%, transparent 70%)' }}
       />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-1/2"
+        style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,0.22), transparent)',
+        }}
+      />
 
+      {/* Bank + network */}
       <div className="relative flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <p className="text-[11px] font-semibold tracking-wider">
-            {bankInitials(card.bank.code, card.bank.name)}
-          </p>
-          <p
-            className="mt-0.5 line-clamp-2 text-[13px] font-semibold leading-tight"
-            style={{ color: theme.ink }}
-          >
-            {card.product.name}
-          </p>
-        </div>
-        <NetworkMark network={card.network} onBrand />
-      </div>
-
-      <div className="relative mt-auto">
-        {/* Chip. Decorative, but it is what makes the tile read as a card. */}
-        <div
-          aria-hidden="true"
-          className="mb-1.5 h-5 w-7 rounded border border-white/25 bg-gradient-to-br from-amber-200/90 to-amber-400/80"
-        />
-
-        {card.bin ? (
-          <p
-            className="numeric text-[13px] tracking-[0.06em]"
-            style={{ color: theme.ink }}
-          >
-            <span>{card.bin}</span>
-            <span aria-hidden="true" className="pl-1 opacity-70">
-              •• •••• ••••
-            </span>
-            <span className="sr-only">BIN {card.bin}</span>
-          </p>
-        ) : (
-          <p
-            className="numeric text-[13px] tracking-[0.06em]"
+        <div className="flex min-w-0 items-center gap-2">
+          <BankMark
+            code={card.bank.code}
+            name={card.bank.name}
+            logoUrl={card.bank.logoUrl}
+            size="sm"
+            className="ring-1 ring-white/30"
+          />
+          <span
+            className="truncate text-[10px] font-semibold uppercase tracking-widest"
             style={{ color: theme.inkMuted }}
           >
-            <span aria-hidden="true">•••• •••• •••• ••••</span>
-            <span className="sr-only">Card number hidden by the owner</span>
-          </p>
+            {card.bank.name}
+          </span>
+        </div>
+
+        <span
+          className="shrink-0 rounded-full border border-white/40 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
+          style={{ color: theme.ink }}
+        >
+          {networkLabel(card.network)}
+        </span>
+      </div>
+
+      {/* Product — the thing people are actually looking for. */}
+      <p
+        className="relative mt-2 line-clamp-2 text-[15px] font-bold leading-tight"
+        style={{ color: theme.ink }}
+      >
+        {card.product.name}
+      </p>
+
+      {/* Digits, or an explicit locked state. */}
+      <div className="relative mt-auto">
+        {card.bin ? (
+          <span className="numeric inline-flex items-center gap-1 rounded-md bg-black/20 px-2 py-1 text-[12px] font-medium tracking-[0.14em] backdrop-blur-sm">
+            <span style={{ color: theme.ink }}>{card.bin}</span>
+            <span aria-hidden="true" style={{ color: theme.inkMuted }}>
+              ••••
+            </span>
+            <span className="sr-only">BIN {card.bin}</span>
+          </span>
+        ) : (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-md bg-black/20 px-2 py-1 text-[10px] font-medium backdrop-blur-sm"
+            style={{ color: theme.inkMuted }}
+          >
+            <svg
+              viewBox="0 0 20 20"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              aria-hidden="true"
+              className="size-3"
+            >
+              <rect x="4" y="9" width="12" height="7" rx="1.5" />
+              <path d="M7 9V6.5a3 3 0 0 1 6 0V9" />
+            </svg>
+            Digits hidden
+          </span>
         )}
       </div>
 
+      {/* Owner + card type */}
       <div className="relative mt-2 flex items-end justify-between gap-2">
-        <div className="min-w-0">
-          {ownerLabel && (
-            <p
-              className="truncate text-[11px] uppercase tracking-wide"
-              style={{ color: theme.inkMuted }}
+        {ownerLabel ? (
+          <span className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/20 py-0.5 pl-0.5 pr-2 backdrop-blur-sm">
+            <span
+              aria-hidden="true"
+              className="grid size-4 shrink-0 place-items-center rounded-full bg-white/90 text-[8px] font-bold"
+              style={{ color: theme.from }}
+            >
+              {card.owner.name.slice(0, 1).toUpperCase()}
+            </span>
+            <span
+              className="truncate text-[10px] font-semibold"
+              style={{ color: theme.ink }}
             >
               {card.owner.name}
-            </p>
-          )}
-        </div>
+            </span>
+          </span>
+        ) : (
+          <span />
+        )}
+
         <span
-          className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
-          style={{ background: 'rgba(255,255,255,0.18)', color: theme.ink }}
+          className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${
+            isCredit ? 'bg-amber-300 text-amber-950' : 'bg-teal-300 text-teal-950'
+          }`}
         >
           {cardTypeLabel(card.cardType)}
         </span>
@@ -112,8 +158,8 @@ export function CardTile({
     <button
       type="button"
       onClick={onOpen}
-      className="group w-full rounded-xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      aria-label={`${card.product.name}, ${cardTypeLabel(card.cardType)}, owned by ${card.owner.name}`}
+      className="group w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      aria-label={`${card.product.name}, ${cardTypeLabel(card.cardType)} ${networkLabel(card.network)}, owned by ${card.owner.name}`}
     >
       {face}
     </button>
@@ -126,9 +172,9 @@ export function VisibilityBadge({
 }: {
   discoverability: 'nobody' | 'friends' | 'everyone'
 }) {
-  if (discoverability === 'nobody') return <Badge tone="neutral">Private</Badge>
-  if (discoverability === 'friends') return <Badge tone="accent">Friends only</Badge>
-  return <Badge tone="success">Discoverable</Badge>
+  if (discoverability === 'nobody') return <Badge tone="neutral">🔒 Private</Badge>
+  if (discoverability === 'friends') return <Badge tone="accent">👥 Friends</Badge>
+  return <Badge tone="success">🌐 Everyone</Badge>
 }
 
 /** What the owner has chosen to do with the first six digits. */
@@ -138,6 +184,6 @@ export function BinBadge({
   binVisibility: 'nobody' | 'friends' | 'everyone'
 }) {
   if (binVisibility === 'nobody') return <Badge tone="neutral">BIN hidden</Badge>
-  if (binVisibility === 'friends') return <Badge tone="accent">BIN: friends</Badge>
-  return <Badge tone="success">BIN: everyone</Badge>
+  if (binVisibility === 'friends') return <Badge tone="accent">BIN · friends</Badge>
+  return <Badge tone="success">BIN · everyone</Badge>
 }

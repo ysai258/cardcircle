@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import type { ReactNode } from 'react'
+import { AppFooter } from '@/components/AppFooter'
 import { AppNav } from '@/components/AppNav'
 import { getCurrentSessionWithBadge } from '@/server/modules/auth/session'
 
@@ -22,14 +23,23 @@ export default async function AppLayout({
   const { user, pendingRequests } = session
 
   return (
-    <div className="flex min-h-full flex-col">
+    /**
+     * A fixed-height column: header, scrolling middle, pinned footer.
+     *
+     * h-dvh rather than h-screen so mobile browsers' collapsing URL bar does
+     * not leave the footer hanging below the fold. Only <main> scrolls —
+     * body overflow is locked in globals.css.
+     */
+    <div className="flex h-dvh flex-col">
       <AppNav userName={user.name} pendingRequests={pendingRequests} />
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-6 sm:py-8">
-        {children}
+
+      <main className="app-scroll flex-1 overflow-y-auto">
+        <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8">
+          {children}
+        </div>
       </main>
-      <footer className="border-t border-border-subtle px-4 py-5 text-center text-xs text-ink-faint">
-        CardCircle never stores full card numbers, CVVs, PINs or OTPs.
-      </footer>
+
+      <AppFooter />
     </div>
   )
 }

@@ -17,7 +17,8 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "test:setup": "ENV_FILE=.env.local tsx scripts/setup-test-db.ts",
-    "pretest": "npm run test:setup"
+    "pretest": "npm run test:setup",
+    "db:logos": "NODE_OPTIONS=--conditions=react-server tsx scripts/set-bank-logos.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.1",

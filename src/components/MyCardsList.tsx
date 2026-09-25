@@ -25,12 +25,11 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
   const [deletingCard, setDeletingCard] = useState<OwnCardDTO | null>(null)
   const [pending, setPending] = useState(false)
 
-  const byBank = new Map<string, { name: string; cards: OwnCardDTO[] }>()
-  for (const card of cards) {
-    const group = byBank.get(card.bank.id) ?? { name: card.bank.name, cards: [] }
-    group.cards.push(card)
-    byBank.set(card.bank.id, group)
-  }
+  // Split by card type rather than by bank. Someone opening My Cards is
+  // usually answering "which credit card do I have for this?", and a single
+  // list grouped by bank buried that behind scrolling.
+  const credit = cards.filter((card) => card.cardType === 'credit')
+  const debit = cards.filter((card) => card.cardType === 'debit')
 
   async function saveSharing(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -82,53 +81,22 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
 
   return (
     <>
-      <div className="space-y-8">
-        {[...byBank.entries()].map(([bankId, group]) => (
-          <section key={bankId}>
-            <h2 className="text-sm font-semibold text-ink-muted">
-              {group.name}
-            </h2>
-            <ul className="mt-3 grid gap-4 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))]">
-              {group.cards.map((card) => (
-                <li key={card.id} className="space-y-2">
-                  <CardTile card={card} ownerLabel={false} />
-
-                  {/* Fixed rows, so cards in the same row stay aligned
-                      regardless of how many badges each one carries. */}
-                  <div className="space-y-1.5 px-0.5">
-                    <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1">
-                      <VisibilityBadge discoverability={card.discoverability} />
-                      <BinBadge binVisibility={card.binVisibility} />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href={`/cards/${card.id}/edit`}
-                        className="inline-flex h-8 items-center rounded-lg border border-border-strong bg-surface-raised px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-sunken"
-                      >
-                        Edit
-                      </Link>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setSharingCard(card)}
-                      >
-                        Privacy
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setDeletingCard(card)}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))}
+      {/* Two columns side by side on a wide screen, stacked on a phone. */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Column
+          title="Credit"
+          tone="credit"
+          items={credit}
+          onEditPrivacy={setSharingCard}
+          onDelete={setDeletingCard}
+        />
+        <Column
+          title="Debit"
+          tone="debit"
+          items={debit}
+          onEditPrivacy={setSharingCard}
+          onDelete={setDeletingCard}
+        />
       </div>
 
       <Dialog
@@ -194,5 +162,101 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
         confirmLabel="Delete card"
       />
     </>
+  )
+}
+
+/**
+ * Defined at module scope, not inside MyCardsList.
+ *
+ * A component declared in a parent's body is a new function identity on
+ * every render, so React unmounts and remounts the whole subtree each time
+ * — which throws away focus and restarts transitions for no reason.
+ */
+function CardRow({
+  card,
+  onEditPrivacy,
+  onDelete,
+}: {
+  card: OwnCardDTO
+  onEditPrivacy: (card: OwnCardDTO) => void
+  onDelete: (card: OwnCardDTO) => void
+}) {
+  return (
+    <li className="space-y-2">
+      <CardTile card={card} ownerLabel={false} />
+
+      {/* Fixed rows, so cards stay aligned however many badges each has. */}
+      <div className="space-y-1.5 px-0.5">
+        <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1">
+          <VisibilityBadge discoverability={card.discoverability} />
+          <BinBadge binVisibility={card.binVisibility} />
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/cards/${card.id}/edit`}
+            className="inline-flex h-8 items-center rounded-lg border-2 border-border-strong bg-surface-raised px-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-sunken"
+          >
+            Edit
+          </Link>
+          <Button size="sm" variant="secondary" onClick={() => onEditPrivacy(card)}>
+            Privacy
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => onDelete(card)}>
+            Delete
+          </Button>
+        </div>
+      </div>
+    </li>
+  )
+}
+
+function Column({
+  title,
+  tone,
+  items,
+  onEditPrivacy,
+  onDelete,
+}: {
+  title: string
+  tone: 'credit' | 'debit'
+  items: OwnCardDTO[]
+  onEditPrivacy: (card: OwnCardDTO) => void
+  onDelete: (card: OwnCardDTO) => void
+}) {
+  return (
+    <section className="min-w-0">
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-bold uppercase tracking-wider ${
+            tone === 'credit'
+              ? 'bg-amber-300 text-amber-950'
+              : 'bg-teal-300 text-teal-950'
+          }`}
+        >
+          {title}
+        </span>
+        <span className="text-xs font-medium text-ink-muted">
+          {items.length} card{items.length === 1 ? '' : 's'}
+        </span>
+      </div>
+
+      {items.length === 0 ? (
+        <p className="rounded-(--radius-card) border-2 border-dashed border-border-strong px-4 py-8 text-center text-sm text-ink-muted">
+          No {title.toLowerCase()} cards yet.
+        </p>
+      ) : (
+        <ul className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(14rem,1fr))]">
+          {items.map((card) => (
+            <CardRow
+              key={card.id}
+              card={card}
+              onEditPrivacy={onEditPrivacy}
+              onDelete={onDelete}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }

@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { HomeSearch } from '@/components/HomeSearch'
+import { PendingRequestsBanner } from '@/components/PendingRequestsBanner'
 import { SmartLink } from '@/components/SmartLink'
 import { bankGradient, bankInitials } from '@/lib/bank-theme'
 import { redirect } from 'next/navigation'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { getCurrentUser } from '@/server/modules/auth/session'
 import { listBanksWithCounts } from '@/server/modules/cards/service'
+import { listIncomingRequests } from '@/server/modules/friends/service'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +22,11 @@ export default async function HomePage() {
   const user = await getCurrentUser()
   if (!user) redirect('/login')
 
-  const banks = await listBanksWithCounts(user.id)
+  // Fetched together so the extra round trip is concurrent, not sequential.
+  const [banks, pendingRequests] = await Promise.all([
+    listBanksWithCounts(user.id),
+    listIncomingRequests(user.id),
+  ])
   const totalCards = banks.reduce((sum, bank) => sum + bank.cardCount, 0)
 
   return (
@@ -33,6 +39,8 @@ export default async function HomePage() {
             : 'Cards your friends choose to share will appear here.'}
         </p>
       </header>
+
+      <PendingRequestsBanner requests={pendingRequests} />
 
       <HomeSearch />
 

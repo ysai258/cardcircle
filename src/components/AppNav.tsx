@@ -73,9 +73,21 @@ export function AppNav({
                 >
                   {link.label}
                   {link.href === '/requests' && pendingRequests > 0 && (
-                    <span className="grid size-4.5 min-w-4.5 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold text-accent-ink">
-                      {pendingRequests}
-                      <span className="sr-only"> pending requests</span>
+                    /**
+                     * Deliberately loud. This is the app's only notification,
+                     * and a friend request sitting unseen is the one thing
+                     * that silently stops the product working: until it is
+                     * accepted, neither person can see what the other shares.
+                     */
+                    <span className="relative flex">
+                      <span
+                        aria-hidden="true"
+                        className="absolute inline-flex size-full animate-ping rounded-full bg-danger opacity-60"
+                      />
+                      <span className="relative grid size-5 min-w-5 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">
+                        {pendingRequests > 9 ? '9+' : pendingRequests}
+                        <span className="sr-only"> pending friend requests</span>
+                      </span>
                     </span>
                   )}
                 </SmartLink>

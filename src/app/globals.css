@@ -3,75 +3,96 @@
 /**
  * CardCircle design tokens.
  *
- * A restrained fintech palette: light slate surfaces, a single confident
- * indigo accent, and status colours that stay legible in both themes.
+ * Warm paper rather than clinical white, one vivid accent, and a set of
+ * supporting hues that each mean something specific — credit is amber, debit
+ * is teal, an owner is violet. Colour carries meaning here rather than
+ * decoration: every fact on a card gets its own treatment so the eye can
+ * pick out "whose is it" and "what kind is it" without reading a label.
  *
- * Tokens are declared as plain custom properties on :root (so they can be
- * redefined inside a media query) and mapped into Tailwind's theme with
- * `@theme inline`. Tailwind v4 does not allow `@theme` inside `@media`.
+ * Tokens are plain custom properties on :root (so a media query can redefine
+ * them) mapped into Tailwind with `@theme inline`. Tailwind v4 does not
+ * allow `@theme` inside `@media`.
  */
 :root {
-  --surface: #ffffff;
+  --surface: #fffdf9;
   --surface-raised: #ffffff;
-  --surface-sunken: #f4f5f9;
-  --border-subtle: #e6e8f0;
-  --border-strong: #cfd4e4;
+  --surface-sunken: #f6f1e8;
+  --border-subtle: #e8e0d2;
+  --border-strong: #d4c9b4;
 
-  --ink: #0b1020;
-  --ink-muted: #4a5578;
-  --ink-faint: #97a0bd;
+  --ink: #211a14;
+  --ink-muted: #6b5f52;
+  --ink-faint: #a29584;
 
-  --accent: #4f46e5;
-  --accent-hover: #4338ca;
-  --accent-soft: #eef0ff;
+  --accent: #6d3bf5;
+  --accent-hover: #5a2ee0;
+  --accent-soft: #efe9ff;
   --accent-ink: #ffffff;
 
-  /* A faint wash behind the page so large empty areas are not flat white. */
+  /* Meaning-bearing hues, used on chips and card faces. */
+  --credit: #b45309;
+  --credit-soft: #fef3c7;
+  --debit: #0f766e;
+  --debit-soft: #ccfbf1;
+  --owner: #9333ea;
+  --owner-soft: #f3e8ff;
+
+  --success: #15803d;
+  --success-soft: #dcfce7;
+  --warning: #b45309;
+  --warning-soft: #fef3c7;
+  --danger: #be123c;
+  --danger-soft: #ffe4e6;
+
+  /* A soft wash so large empty areas are not flat. */
   --page-wash:
-    radial-gradient(900px 400px at 12% -10%, rgba(79, 70, 229, 0.07), transparent 60%),
-    radial-gradient(700px 360px at 92% 0%, rgba(139, 92, 246, 0.06), transparent 62%);
+    radial-gradient(820px 420px at 8% -8%, rgba(109, 59, 245, 0.08), transparent 62%),
+    radial-gradient(680px 380px at 96% 2%, rgba(236, 72, 153, 0.06), transparent 60%);
 
-  --success: #067647;
-  --success-soft: #ecfdf3;
-  --warning: #b54708;
-  --warning-soft: #fffaeb;
-  --danger: #b42318;
-  --danger-soft: #fef3f2;
-
-  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.06), 0 1px 3px rgb(16 24 40 / 0.1);
-  --shadow-raised: 0 4px 8px -2px rgb(16 24 40 / 0.1), 0 2px 4px -2px rgb(16 24 40 / 0.06);
+  --shadow-card: 0 1px 2px rgb(33 26 20 / 0.05), 0 2px 8px -2px rgb(33 26 20 / 0.08);
+  --shadow-raised: 0 8px 20px -6px rgb(33 26 20 / 0.16), 0 2px 6px -2px rgb(33 26 20 / 0.08);
+  /* A chunky offset edge. This is where the "quirky" lives. */
+  --shadow-pop: 3px 3px 0 0 var(--ink);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: #0a0e1a;
-    --surface-raised: #141a2a;
-    --surface-sunken: #070a12;
-    --border-subtle: #1e2536;
-    --border-strong: #2f3850;
+    --surface: #17131c;
+    --surface-raised: #211b28;
+    --surface-sunken: #100d14;
+    --border-subtle: #2e2637;
+    --border-strong: #463a54;
 
-    --ink: #f2f4f9;
-    --ink-muted: #9aa3bd;
-    --ink-faint: #616b85;
+    --ink: #f7f2ec;
+    --ink-muted: #b3a5bd;
+    --ink-faint: #7d6f88;
 
-    --accent: #7c7cf7;
-    --accent-hover: #9a9afb;
-    --accent-soft: #1c1d3d;
-    --accent-ink: #ffffff;
+    --accent: #a78bfa;
+    --accent-hover: #c4b5fd;
+    --accent-soft: #2a2140;
+    --accent-ink: #1a1320;
+
+    --credit: #fbbf24;
+    --credit-soft: #3a2a0c;
+    --debit: #5eead4;
+    --debit-soft: #0b2f2b;
+    --owner: #d8b4fe;
+    --owner-soft: #2e1d3f;
+
+    --success: #86efac;
+    --success-soft: #0d2f1a;
+    --warning: #fbbf24;
+    --warning-soft: #3a2a0c;
+    --danger: #fda4af;
+    --danger-soft: #3d1420;
 
     --page-wash:
-      radial-gradient(900px 400px at 12% -10%, rgba(124, 124, 247, 0.13), transparent 60%),
-      radial-gradient(700px 360px at 92% 0%, rgba(167, 139, 250, 0.09), transparent 62%);
+      radial-gradient(820px 420px at 8% -8%, rgba(167, 139, 250, 0.14), transparent 62%),
+      radial-gradient(680px 380px at 96% 2%, rgba(236, 72, 153, 0.09), transparent 60%);
 
-    --success: #75e0a7;
-    --success-soft: #0a2822;
-    --warning: #fec84b;
-    --warning-soft: #2b1f0a;
-    --danger: #fda29b;
-    --danger-soft: #2d1513;
-
-    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 1px 3px rgb(0 0 0 / 0.4);
-    --shadow-raised: 0 4px 8px -2px rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 2px 8px -2px rgb(0 0 0 / 0.5);
+    --shadow-raised: 0 10px 24px -6px rgb(0 0 0 / 0.6), 0 2px 6px -2px rgb(0 0 0 / 0.4);
+    --shadow-pop: 3px 3px 0 0 rgb(0 0 0 / 0.55);
   }
 }
 
@@ -91,6 +112,13 @@
   --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
 
+  --color-credit: var(--credit);
+  --color-credit-soft: var(--credit-soft);
+  --color-debit: var(--debit);
+  --color-debit-soft: var(--debit-soft);
+  --color-owner: var(--owner);
+  --color-owner-soft: var(--owner-soft);
+
   --color-success: var(--success);
   --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
@@ -100,39 +128,67 @@
 
   --shadow-card: var(--shadow-card);
   --shadow-raised: var(--shadow-raised);
+  --shadow-pop: var(--shadow-pop);
 
-  --radius-card: 0.875rem;
+  --radius-card: 1rem;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 }
 
+/**
+ * The app owns the viewport.
+ *
+ * html/body are locked to the viewport height with no scrolling of their
+ * own, so the header and footer stay put and only the main region scrolls.
+ * Without `overflow: hidden` here, iOS in particular lets the whole document
+ * rubber-band and drags the "fixed" footer out of view.
+ */
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background: var(--page-wash), var(--surface-sunken);
-  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
-/* Headings get tighter tracking so the app reads less like a document. */
 h1,
 h2 {
-  letter-spacing: -0.018em;
+  letter-spacing: -0.02em;
 }
 
-/* Visible focus for keyboard users, suppressed for mouse clicks. */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
-/* Tabular figures stop BINs and last-4s from shifting as values change. */
+/* Tabular figures stop BINs from shifting as values change. */
 .numeric {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+}
+
+/* The scrollable middle, styled so it does not look like a raw scroll box. */
+.app-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+  overscroll-behavior: contain;
+}
+.app-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.app-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
 }
 
 @keyframes shimmer {
