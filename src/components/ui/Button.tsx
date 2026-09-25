@@ -14,8 +14,10 @@ const VARIANTS: Record<Variant, string> = {
 }
 
 const SIZES: Record<Size, string> = {
-  sm: 'h-8 px-3 text-sm gap-1.5',
-  md: 'h-10 px-4 text-sm gap-2',
+  // 36px and 44px. The small size was 32px, below the point where a thumb
+  // hits reliably on a phone.
+  sm: 'h-9 px-3 text-sm gap-1.5',
+  md: 'h-11 px-4 text-sm gap-2',
 }
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {

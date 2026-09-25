@@ -59,7 +59,7 @@ export default async function BankPage({
       <div>
         <Link
           href="/"
-          className="text-sm text-ink-muted hover:text-ink hover:underline"
+          className="inline-flex min-h-9 items-center text-sm text-ink-muted transition-colors hover:text-ink hover:underline"
         >
           ← All banks
         </Link>
@@ -69,18 +69,29 @@ export default async function BankPage({
         </p>
       </div>
 
-      <CardFilters />
+      {/*
+        Filters to the side on a wide screen. They used to sit in a
+        full-width band above the grid, which pushed the cards below the fold
+        while leaving the margins empty.
+      */}
+      <div className="gap-6 lg:grid lg:grid-cols-[16rem_1fr] lg:items-start">
+        <aside className="mb-6 lg:sticky lg:top-4 lg:mb-0">
+          <CardFilters />
+        </aside>
 
-      <BankCardList cards={result.items} />
+        <div className="min-w-0 space-y-6">
+          <BankCardList cards={result.items} />
 
-      {result.totalPages > 1 && (
-        <Pagination
-          bankId={bank.id}
-          page={result.page}
-          totalPages={result.totalPages}
-          search={rawSearch}
-        />
-      )}
+          {result.totalPages > 1 && (
+            <Pagination
+              bankId={bank.id}
+              page={result.page}
+              totalPages={result.totalPages}
+              search={rawSearch}
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

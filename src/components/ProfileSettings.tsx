@@ -108,7 +108,7 @@ export function ProfileSettings({ me }: { me: MeDTO }) {
               <button
                 type="button"
                 onClick={() => setPhoneOpen(true)}
-                className="rounded px-1.5 py-0.5 font-sans text-xs font-medium text-accent hover:underline"
+                className="inline-flex min-h-9 items-center rounded px-2 font-sans text-xs font-semibold text-accent hover:underline"
               >
                 Change
               </button>
@@ -161,7 +161,7 @@ export function ProfileSettings({ me }: { me: MeDTO }) {
           ).map((option) => (
             <label
               key={option.value}
-              className={`flex cursor-pointer gap-3 rounded-lg border px-3 py-2.5 transition-colors ${
+              className={`flex min-h-12 cursor-pointer items-start gap-3 rounded-lg border-2 px-3 py-3 transition-colors ${
                 visibility === option.value
                   ? 'border-accent bg-accent-soft'
                   : 'border-border-subtle hover:bg-surface-sunken'
@@ -174,7 +174,7 @@ export function ProfileSettings({ me }: { me: MeDTO }) {
                 checked={visibility === option.value}
                 disabled={pending}
                 onChange={() => update(option.value)}
-                className="mt-0.5 accent-[var(--accent)]"
+                className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
               />
               <span>
                 <span className="block text-sm font-medium text-ink">

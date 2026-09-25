@@ -195,7 +195,7 @@ function CardRow({
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/cards/${card.id}/edit`}
-            className="inline-flex h-8 items-center rounded-lg border-2 border-border-strong bg-surface-raised px-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-sunken"
+            className="inline-flex h-9 items-center rounded-lg border-2 border-border-strong bg-surface-raised px-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-sunken"
           >
             Edit
           </Link>

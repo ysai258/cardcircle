@@ -97,12 +97,12 @@ export function RecoveryCodes({
 
       {onAcknowledge && (
         <div className="space-y-3 border-t border-border-subtle pt-4">
-          <label className="flex cursor-pointer items-start gap-2.5">
+          <label className="flex min-h-11 cursor-pointer items-start gap-2.5 py-1">
             <input
               type="checkbox"
               checked={confirmed}
               onChange={(event) => setConfirmed(event.target.checked)}
-              className="mt-0.5 accent-[var(--accent)]"
+              className="mt-0.5 size-5 shrink-0 accent-[var(--accent)]"
             />
             <span className="text-sm text-ink">
               I have saved my recovery codes somewhere safe.

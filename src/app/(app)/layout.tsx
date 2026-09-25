@@ -34,7 +34,7 @@ export default async function AppLayout({
       <AppNav userName={user.name} pendingRequests={pendingRequests} />
 
       <main className="app-scroll flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:py-8">
+        <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:py-8">
           {children}
         </div>
       </main>

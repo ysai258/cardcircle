@@ -38,7 +38,7 @@ export default async function UserProfilePage({
       <div>
         <Link
           href="/friends"
-          className="text-sm text-ink-muted hover:text-ink hover:underline"
+          className="inline-flex min-h-9 items-center text-sm text-ink-muted transition-colors hover:text-ink hover:underline"
         >
           ← Friends
         </Link>

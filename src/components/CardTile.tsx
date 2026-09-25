@@ -1,7 +1,12 @@
 import { Badge } from '@/components/ui/Badge'
 import { BankMark } from '@/components/BankMark'
 import { cardTypeLabel, networkLabel } from '@/components/NetworkMark'
-import { bankGradient, bankTheme } from '@/lib/bank-theme'
+import {
+  bankGradientFor,
+  bankTheme,
+  cardPattern,
+  cardPatternSize,
+} from '@/lib/bank-theme'
 import type { CardSummaryDTO } from '@/server/modules/cards/dto'
 
 /**
@@ -34,11 +39,35 @@ export function CardTile({
   const theme = bankTheme(card.bank.code)
   const isCredit = card.cardType === 'credit'
 
+  /**
+   * Seeded on the PRODUCT, not the card id.
+   *
+   * Two people holding an HDFC Millennia then see the same face, so the card
+   * becomes recognisable across the app rather than a different colour for
+   * every row. Within a bank the products still differ from each other,
+   * which is what stops a bank page being a wall of identical blue.
+   */
+  const seed = `${card.bank.code}:${card.product.name}`
+  const faceBackground = bankGradientFor(card.bank.code, seed)
+  const pattern = cardPattern(seed)
+
   const face = (
     <div
       className="relative flex aspect-[1.6/1] w-full flex-col overflow-hidden rounded-2xl border-2 border-black/10 p-3.5 shadow-card transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-raised"
-      style={{ background: bankGradient(card.bank.code), color: theme.ink }}
+      style={{ background: faceBackground, color: theme.ink }}
     >
+      {/* Texture. Colour alone left a bank's cards indistinguishable. */}
+      {pattern && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: pattern,
+            backgroundSize: cardPatternSize(seed),
+          }}
+        />
+      )}
+
       {/* Gloss, so a flat gradient reads as a physical surface. */}
       <div
         aria-hidden="true"

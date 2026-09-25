@@ -20,7 +20,7 @@ export default async function AddCardPage() {
       <div>
         <Link
           href="/cards"
-          className="text-sm text-ink-muted hover:text-ink hover:underline"
+          className="inline-flex min-h-9 items-center text-sm text-ink-muted transition-colors hover:text-ink hover:underline"
         >
           ← My Cards
         </Link>

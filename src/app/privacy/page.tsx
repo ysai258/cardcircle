@@ -15,7 +15,7 @@ export default function PrivacyPage() {
         <div className="mx-auto w-full max-w-2xl px-4 py-10">
           <Link
             href="/"
-            className="text-sm text-ink-muted transition-colors hover:text-ink"
+            className="inline-flex min-h-9 items-center text-sm text-ink-muted transition-colors hover:text-ink"
           >
             ← CardCircle
           </Link>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
                 Write to{' '}
                 <a
                   href="mailto:ysaimuppineni789@gmail.com?subject=CardCircle%20privacy"
-                  className="font-medium text-accent hover:underline"
+                  className="inline-flex min-h-9 items-center font-medium text-accent hover:underline"
                 >
                   ysaimuppineni789@gmail.com
                 </a>

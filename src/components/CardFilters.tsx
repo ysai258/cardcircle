@@ -98,7 +98,7 @@ export function CardFilters() {
   }, [bin])
 
   return (
-    <div className="space-y-4 rounded-(--radius-card) border border-border-subtle bg-surface-raised p-4 shadow-card">
+    <div className="space-y-4 rounded-(--radius-card) border-2 border-border-subtle bg-surface-raised p-4 shadow-card">
       <FilterRow
         label="Card type"
         options={CARD_TYPES}
@@ -129,7 +129,7 @@ export function CardFilters() {
             setBin(event.target.value.replace(/\D/g, '').slice(0, 6))
           }
           placeholder="540123"
-          className="numeric mt-1.5 w-full max-w-[12rem] rounded-lg border border-border-strong bg-surface px-3 py-1.5 text-sm text-ink placeholder:text-ink-faint"
+          className="numeric mt-1.5 w-full rounded-lg border-2 border-border-strong bg-surface px-3 py-1.5 text-sm text-ink placeholder:text-ink-faint"
         />
       </div>
     </div>
@@ -169,7 +169,7 @@ function FilterRow({
             onClick={() => onChange(option.value)}
             aria-pressed={value === option.value}
             className={cn(
-              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              'inline-flex min-h-9 items-center rounded-full border-2 px-3 text-xs font-semibold transition-colors',
               value === option.value
                 ? 'border-transparent bg-accent text-accent-ink'
                 : 'border-border-strong bg-surface text-ink-muted hover:bg-surface-sunken hover:text-ink',

@@ -9,7 +9,7 @@ import Link from 'next/link'
 export function AppFooter() {
   return (
     <footer className="shrink-0 border-t border-border-subtle bg-surface/90 backdrop-blur">
-      <div className="mx-auto flex max-w-5xl flex-col items-center gap-1.5 px-4 py-3 text-center sm:flex-row sm:justify-between sm:text-left">
+      <div className="mx-auto flex max-w-7xl flex-col items-center gap-1.5 px-4 py-3 text-center sm:flex-row sm:justify-between sm:text-left">
         <p className="text-xs text-ink-muted">
           CardCircle stores no card number, CVV, expiry or last-4 — only which
           card someone holds.
@@ -18,7 +18,7 @@ export function AppFooter() {
         <div className="flex items-center gap-3 text-xs">
           <Link
             href="/privacy"
-            className="text-ink-muted transition-colors hover:text-ink"
+            className="inline-flex min-h-9 items-center px-1 text-ink-muted transition-colors hover:text-ink"
           >
             Privacy
           </Link>
@@ -27,7 +27,7 @@ export function AppFooter() {
           </span>
           <a
             href="mailto:ysaimuppineni789@gmail.com?subject=CardCircle"
-            className="inline-flex items-center gap-1.5 font-medium text-accent transition-colors hover:text-accent-hover"
+            className="inline-flex min-h-9 items-center gap-1.5 px-1 font-medium text-accent transition-colors hover:text-accent-hover"
           >
             <svg
               viewBox="0 0 20 20"

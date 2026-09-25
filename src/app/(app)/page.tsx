@@ -42,8 +42,7 @@ export default async function HomePage() {
 
       <PendingRequestsBanner requests={pendingRequests} />
 
-      <HomeSearch />
-
+      <HomeSearch>
       {banks.length === 0 ? (
         <EmptyState
           title="No cards to show yet"
@@ -102,6 +101,7 @@ export default async function HomePage() {
           ))}
         </ul>
       )}
+      </HomeSearch>
     </div>
   )
 }

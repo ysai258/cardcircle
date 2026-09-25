@@ -186,7 +186,7 @@ export function FriendsPanel({
             {result.relationship === 'friends' && (
               <Link
                 href={`/users/${result.id}`}
-                className="text-sm font-medium text-accent hover:underline"
+                className="inline-flex min-h-9 items-center text-sm font-semibold text-accent hover:underline"
               >
                 View profile
               </Link>
@@ -216,7 +216,7 @@ export function FriendsPanel({
               >
                 <SmartLink
                   href={`/users/${friend.id}`}
-                  className="text-sm font-medium text-ink hover:underline"
+                  className="inline-flex min-h-9 items-center text-sm font-semibold text-ink hover:underline"
                 >
                   {friend.name}
                 </SmartLink>
