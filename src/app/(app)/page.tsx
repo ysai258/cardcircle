@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { HomeSearch } from '@/components/HomeSearch'
 import { SmartLink } from '@/components/SmartLink'
 import { bankGradient, bankInitials } from '@/lib/bank-theme'
 import { redirect } from 'next/navigation'
@@ -32,6 +33,8 @@ export default async function HomePage() {
             : 'Cards your friends choose to share will appear here.'}
         </p>
       </header>
+
+      <HomeSearch />
 
       {banks.length === 0 ? (
         <EmptyState

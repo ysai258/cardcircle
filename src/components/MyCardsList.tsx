@@ -1,8 +1,10 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { CardTile, VisibilityBadge } from '@/components/CardTile'
+import type { FormEvent } from 'react'
+import { BinBadge, CardTile, VisibilityBadge } from '@/components/CardTile'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog, Dialog } from '@/components/ui/Dialog'
 import { SelectField } from '@/components/ui/Field'
@@ -13,8 +15,8 @@ import type { OwnCardDTO } from '@/server/modules/cards/dto'
 /**
  * My Cards, grouped by bank.
  *
- * The owner sees their own expiry in plain text — it is their data. Every
- * other viewer's access runs through the sharing settings edited here.
+ * The owner always sees their own BIN — it is their data. What the privacy
+ * dialog controls is what everyone ELSE sees.
  */
 export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
   const router = useRouter()
@@ -25,16 +27,16 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
 
   const byBank = new Map<string, { name: string; cards: OwnCardDTO[] }>()
   for (const card of cards) {
-    const group = byBank.get(card.bank.id) ?? {
-      name: card.bank.name,
-      cards: [],
-    }
+    const group = byBank.get(card.bank.id) ?? { name: card.bank.name, cards: [] }
     group.cards.push(card)
     byBank.set(card.bank.id, group)
   }
 
-  async function saveSharing(formData: FormData) {
+  async function saveSharing(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     if (!sharingCard) return
+
+    const formData = new FormData(event.currentTarget)
     setPending(true)
 
     try {
@@ -42,11 +44,11 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
         method: 'PATCH',
         body: JSON.stringify({
           discoverability: String(formData.get('discoverability') ?? ''),
-          expiryVisibility: String(formData.get('expiryVisibility') ?? ''),
+          binVisibility: String(formData.get('binVisibility') ?? ''),
         }),
       })
 
-      toast('Sharing settings updated.', 'success')
+      toast('Privacy settings updated.', 'success')
       setSharingCard(null)
       router.refresh()
     } catch (caught) {
@@ -89,39 +91,29 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
             <ul className="mt-3 grid gap-4 grid-cols-[repeat(auto-fill,minmax(15rem,1fr))]">
               {group.cards.map((card) => (
                 <li key={card.id} className="space-y-2">
-                  {/* The same card face used everywhere else, so a card
-                      looks the same in My Cards as in discovery. */}
                   <CardTile card={card} ownerLabel={false} />
 
-                  {/* Two fixed rows rather than one wrapping row: a card
-                      with an expiry used to push its buttons onto a second
-                      line while its neighbour kept them inline, so cards in
-                      the same row ended up different heights. */}
+                  {/* Fixed rows, so cards in the same row stay aligned
+                      regardless of how many badges each one carries. */}
                   <div className="space-y-1.5 px-0.5">
                     <div className="flex min-h-5 flex-wrap items-center gap-x-2 gap-y-1">
                       <VisibilityBadge discoverability={card.discoverability} />
-                      {card.expiry && (
-                        <span className="numeric text-xs text-ink-muted">
-                          Expires {card.expiry}
-                          <span className="text-ink-faint">
-                            {' '}
-                            (
-                            {card.sharing.expiry === 'friends'
-                              ? 'shared'
-                              : 'not shared'}
-                            )
-                          </span>
-                        </span>
-                      )}
+                      <BinBadge binVisibility={card.binVisibility} />
                     </div>
 
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        href={`/cards/${card.id}/edit`}
+                        className="inline-flex h-8 items-center rounded-lg border border-border-strong bg-surface-raised px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-sunken"
+                      >
+                        Edit
+                      </Link>
                       <Button
                         size="sm"
                         variant="secondary"
                         onClick={() => setSharingCard(card)}
                       >
-                        Sharing
+                        Privacy
                       </Button>
                       <Button
                         size="sm"
@@ -142,20 +134,11 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
       <Dialog
         open={sharingCard !== null}
         onClose={() => setSharingCard(null)}
-        title="Sharing settings"
-        description={
-          sharingCard
-            ? `${sharingCard.bank.name} ${sharingCard.nickname}`
-            : undefined
-        }
+        title="Privacy settings"
+        description={sharingCard?.product.name}
       >
         {sharingCard && (
-          <form
-            id="sharing-form"
-            action={saveSharing}
-            className="space-y-4"
-            key={sharingCard.id}
-          >
+          <form onSubmit={saveSharing} className="space-y-4" key={sharingCard.id}>
             <SelectField
               label="Who can discover this card?"
               name="discoverability"
@@ -167,17 +150,14 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
             </SelectField>
 
             <SelectField
-              label="Share expiry with"
-              name="expiryVisibility"
-              defaultValue={sharingCard.sharing.expiry}
-              hint={
-                sharingCard.expiry
-                  ? undefined
-                  : 'You have not recorded an expiry for this card, so nothing will be shared.'
-              }
+              label="Who can see the first 6 digits?"
+              name="binVisibility"
+              defaultValue={sharingCard.binVisibility}
+              hint="Hidden means people see only that you hold this card."
             >
-              <option value="nobody">Nobody</option>
               <option value="friends">My friends</option>
+              <option value="everyone">Anyone who can discover it</option>
+              <option value="nobody">Nobody — mask completely</option>
             </SelectField>
 
             <p className="rounded-lg bg-surface-sunken px-3 py-2 text-xs text-ink-muted">
@@ -208,7 +188,7 @@ export function MyCardsList({ cards }: { cards: OwnCardDTO[] }) {
         title="Delete this card?"
         description={
           deletingCard
-            ? `${deletingCard.bank.name} ${deletingCard.nickname} will be removed from CardCircle. Friends will no longer see it. This cannot be undone.`
+            ? `${deletingCard.product.name} will be removed from CardCircle. Friends will no longer see it. This cannot be undone.`
             : ''
         }
         confirmLabel="Delete card"

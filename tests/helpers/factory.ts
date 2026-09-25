@@ -3,16 +3,17 @@ import { db } from '@/db'
 import {
   banks,
   blocks,
+  cardProducts,
   cards,
-  cardSharingSettings,
   friendships,
   users,
   type CardNetwork,
   type CardType,
   type Discoverability,
+  type FieldVisibility,
   type Visibility,
 } from '@/db/schema'
-import { encrypt } from '@/server/crypto/aead'
+import { productSlug } from '@/server/modules/cards/product-slug'
 import { hashPassword } from '@/server/crypto/password'
 import { encryptPhone, normalizePhone, phoneHmac } from '@/server/crypto/phone'
 
@@ -81,42 +82,68 @@ export async function createTestBank(
   return { id: row.id, name: row.name, code: row.code }
 }
 
+export async function createTestProduct(input: {
+  bankId: string
+  cardType?: CardType
+  name?: string
+  isVerified?: boolean
+  createdBy?: string
+}): Promise<{ id: string; name: string }> {
+  const name = input.name ?? `Test Product ${randomUUID().slice(0, 8)}`
+
+  const [row] = await db
+    .insert(cardProducts)
+    .values({
+      bankId: input.bankId,
+      cardType: input.cardType ?? 'credit',
+      name,
+      slug: productSlug(name),
+      isVerified: input.isVerified ?? true,
+      createdBy: input.createdBy ?? null,
+    })
+    .returning({ id: cardProducts.id, name: cardProducts.name })
+
+  if (!row) throw new Error('Failed to create test product')
+  return row
+}
+
 export async function createTestCard(input: {
   ownerId: string
   bankId: string
-  nickname?: string
+  productId?: string
+  productName?: string
   cardType?: CardType
   network?: CardNetwork
   bin?: string
-  last4?: string
-  expiry?: string | null
   discoverability?: Discoverability
-  expiryVisibility?: Visibility
-}): Promise<{ id: string }> {
+  binVisibility?: FieldVisibility
+}): Promise<{ id: string; productId: string }> {
+  const cardType = input.cardType ?? 'credit'
+
+  const productId =
+    input.productId ??
+    (
+      await createTestProduct({
+        bankId: input.bankId,
+        cardType,
+        name: input.productName,
+      })
+    ).id
+
   const [row] = await db
     .insert(cards)
     .values({
       ownerId: input.ownerId,
-      bankId: input.bankId,
-      nickname: input.nickname ?? 'Test Card',
-      cardType: input.cardType ?? 'credit',
+      productId,
       network: input.network ?? 'visa',
       bin: input.bin ?? '540123',
-      last4: input.last4 ?? '1234',
-      expiryCt: input.expiry ? encrypt('expiry-enc-v1', input.expiry) : null,
+      binVisibility: input.binVisibility ?? 'friends',
       discoverability: input.discoverability ?? 'everyone',
     })
     .returning()
 
   if (!row) throw new Error('Failed to create test card')
-
-  await db.insert(cardSharingSettings).values({
-    cardId: row.id,
-    fieldName: 'expiry',
-    visibility: input.expiryVisibility ?? 'nobody',
-  })
-
-  return { id: row.id }
+  return { id: row.id, productId }
 }
 
 export async function makeFriends(userA: string, userB: string): Promise<void> {

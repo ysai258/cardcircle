@@ -1,12 +1,16 @@
 import { z } from 'zod'
 import { jsonResponse, readJsonBody } from '@/server/common/http'
 import { authedRoute } from '@/server/common/route'
-import { visibilitySchema } from '@/server/common/validation'
+import {
+  mobileNumberSchema,
+  visibilitySchema,
+} from '@/server/common/validation'
 import {
   destroyCurrentSession,
   getCurrentUser,
 } from '@/server/modules/auth/session'
 import {
+  changePhoneNumber,
   deleteAccount,
   toMeDTO,
   updatePhoneVisibility,
@@ -17,6 +21,33 @@ export const dynamic = 'force-dynamic'
 
 const updateMeSchema = z.strictObject({
   phoneVisibility: visibilitySchema,
+})
+
+/**
+ * Changing the mobile number is its own endpoint, not part of PATCH /me.
+ *
+ * It needs the password, it can conflict with another account, and it moves
+ * the key friends use to find you — none of which belong in the same
+ * request as flipping a visibility toggle.
+ */
+const changePhoneSchema = z.strictObject({
+  newPhone: mobileNumberSchema,
+  password: z.string().min(1, 'Enter your password').max(1024),
+})
+
+export const PUT = authedRoute(async ({ request, user, requestId, log }) => {
+  const body = changePhoneSchema.parse(await readJsonBody(request))
+
+  const result = await changePhoneNumber({
+    userId: user.id,
+    newPhone: body.newPhone,
+    password: body.password,
+  })
+
+  // The number itself is never logged.
+  log.info('Mobile number changed', { userId: user.id })
+
+  return jsonResponse({ phone: { masked: result.masked } }, { requestId })
 })
 
 export const GET = authedRoute(async ({ user, requestId }) =>

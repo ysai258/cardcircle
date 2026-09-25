@@ -18,18 +18,18 @@ import postgres from 'postgres'
 import {
   banks,
   blocks,
+  cardProducts,
   cards,
-  cardSharingSettings,
   friendships,
   users,
   type CardNetwork,
   type CardType,
   type Discoverability,
+  type FieldVisibility,
   type Visibility,
 } from '../src/db/schema'
 import { hashPassword } from '../src/server/crypto/password'
 import { encryptPhone, normalizePhone, phoneHmac } from '../src/server/crypto/phone'
-import { encrypt } from '../src/server/crypto/aead'
 
 /** Every seeded account uses this password. Development only. */
 const DEV_PASSWORD = 'cardcircle-dev-2026'
@@ -47,130 +47,125 @@ const PEOPLE = [
 type CardSeed = {
   owner: string
   bank: string
-  nickname: string
-  variant?: string
+  /** Must match a product name seeded by migration 0004. */
+  product: string
   cardType: CardType
   network: CardNetwork
   bin: string
-  last4: string
-  expiry?: string
   discoverability?: Discoverability
-  expiryVisibility?: Visibility
+  binVisibility?: FieldVisibility
 }
 
 /** All BINs below are invented for development. */
 const CARDS: CardSeed[] = [
   // --- The demo scenario: HDFC + Credit + Visa ---------------------------
-  // Rahul is Alice's friend and shares both expiry and (via his profile) phone.
+  // Rahul is Alice's friend and shares his BIN with friends.
   {
     owner: 'rahul',
     bank: 'HDFC',
-    nickname: 'Millennia',
-    variant: 'Millennia Credit Card',
+    product: 'HDFC Millennia',
     cardType: 'credit',
     network: 'visa',
     bin: '540123',
-    last4: '1234',
-    expiry: '08/29',
-    expiryVisibility: 'friends',
+    binVisibility: 'friends',
   },
-  // Arjun is NOT Alice's friend: she sees the safe subset and a request CTA.
+  // Arjun is NOT Alice's friend, and masks his BIN entirely: she can see he
+  // holds the card, but not a single digit of it.
   {
     owner: 'arjun',
     bank: 'HDFC',
-    nickname: 'Regalia',
-    variant: 'Regalia Gold',
+    product: 'HDFC Regalia',
     cardType: 'credit',
     network: 'visa',
     bin: '456789',
-    last4: '9821',
-    expiry: '11/28',
-    expiryVisibility: 'friends',
+    binVisibility: 'nobody',
   },
 
   // --- Variety for filters ----------------------------------------------
   {
     owner: 'rahul',
     bank: 'HDFC',
-    nickname: 'MoneyBack',
+    product: 'HDFC MoneyBack+',
     cardType: 'credit',
     network: 'mastercard',
     bin: '532100',
-    last4: '4477',
+    binVisibility: 'everyone',
   },
   {
     owner: 'charlie',
     bank: 'HDFC',
-    nickname: 'Salary Debit',
+    product: 'HDFC Millennia Debit',
     cardType: 'debit',
     network: 'rupay',
     bin: '607412',
-    last4: '3311',
   },
   {
     owner: 'rahul',
     bank: 'SBI',
-    nickname: 'SBI Cashback',
+    product: 'SBI Cashback Card',
     cardType: 'credit',
     network: 'visa',
     bin: '456701',
-    last4: '9876',
-    expiry: '02/30',
-    expiryVisibility: 'nobody', // shared=false, to prove the toggle works
+    binVisibility: 'everyone',
   },
   {
     owner: 'arjun',
     bank: 'SBI',
-    nickname: 'IndianOil SBI',
+    product: 'SBI SimplyCLICK',
     cardType: 'credit',
     network: 'visa',
     bin: '512345',
-    last4: '3456',
   },
   {
     owner: 'charlie',
     bank: 'AXIS',
-    nickname: 'Airtel Axis',
+    product: 'Airtel Axis Bank',
     cardType: 'credit',
     network: 'mastercard',
     bin: '532101',
-    last4: '7777',
+    binVisibility: 'everyone',
+  },
+  {
+    owner: 'charlie',
+    bank: 'AXIS',
+    product: 'Flipkart Axis Bank',
+    cardType: 'credit',
+    network: 'visa',
+    bin: '452100',
+    binVisibility: 'everyone',
   },
   {
     owner: 'charlie',
     bank: 'ICICI',
-    nickname: 'Amazon Pay ICICI',
+    product: 'Amazon Pay ICICI',
     cardType: 'credit',
     network: 'visa',
-    bin: '452100',
-    last4: '2020',
+    bin: '452101',
+    binVisibility: 'everyone',
   },
   {
     owner: 'david',
     bank: 'AMEX',
-    nickname: 'Amex Platinum Travel',
+    product: 'Amex Platinum Travel',
     cardType: 'credit',
     network: 'amex',
     bin: '379100',
-    last4: '1005',
   },
   {
     owner: 'david',
     bank: 'KOTAK',
-    nickname: 'Kotak 811 Debit',
+    product: 'Kotak 811 Debit',
     cardType: 'debit',
     network: 'rupay',
     bin: '607413',
-    last4: '8110',
   },
   {
     owner: 'arjun',
     bank: 'IDFC',
-    nickname: 'IDFC Wealth',
+    product: 'IDFC FIRST Wealth',
     cardType: 'credit',
     network: 'visa',
     bin: '451200',
-    last4: '6060',
   },
 
   // --- Privacy variations ------------------------------------------------
@@ -178,22 +173,20 @@ const CARDS: CardSeed[] = [
   {
     owner: 'david',
     bank: 'HDFC',
-    nickname: 'Private Backup Card',
+    product: 'HDFC Infinia',
     cardType: 'credit',
     network: 'visa',
     bin: '540999',
-    last4: '0001',
     discoverability: 'nobody',
   },
   // Friends-only: invisible to strangers in discovery.
   {
     owner: 'rahul',
     bank: 'ICICI',
-    nickname: 'ICICI Coral (friends only)',
+    product: 'ICICI Coral',
     cardType: 'credit',
     network: 'rupay',
     bin: '607414',
-    last4: '5150',
     discoverability: 'friends',
   },
   // Bob's card. Bob and Alice have blocked each other, so Alice must never
@@ -201,22 +194,19 @@ const CARDS: CardSeed[] = [
   {
     owner: 'bob',
     bank: 'RBL',
-    nickname: 'RBL ShopRite',
+    product: 'RBL ShopRite',
     cardType: 'credit',
     network: 'mastercard',
     bin: '532555',
-    last4: '9090',
   },
   {
     owner: 'alice',
     bank: 'INDUSIND',
-    nickname: 'IndusInd Legend',
+    product: 'IndusInd Legend',
     cardType: 'credit',
     network: 'visa',
     bin: '456999',
-    last4: '4321',
-    expiry: '05/31',
-    expiryVisibility: 'friends',
+    binVisibility: 'friends',
   },
 ]
 
@@ -232,15 +222,27 @@ async function main(): Promise<void> {
   const db = drizzle(client)
 
   try {
-    // `banks` is deliberately absent: it is reference data owned by
-    // migration 0001, not fixture data. Truncating it here would leave a
-    // freshly seeded developer database inconsistent with production.
+    // Deletes, not TRUNCATE ... CASCADE.
+    //
+    // CASCADE drags in every table with a foreign key to the ones listed —
+    // and card_products references users through `created_by`. Truncating
+    // users therefore wiped the entire 270-row product catalogue, which
+    // ships as an applied migration and so does NOT come back when
+    // migrations re-run. Explicit deletes in dependency order keep banks and
+    // card_products, which are reference data, not fixtures.
     console.log('Clearing existing user data...')
-    await db.execute(
-      sql`TRUNCATE TABLE audit_logs, reports, blocks, friendships,
-          card_sharing_settings, cards, sessions, users, rate_limits
-          RESTART IDENTITY CASCADE`,
-    )
+    await db.execute(sql`DELETE FROM audit_logs`)
+    await db.execute(sql`DELETE FROM reports`)
+    await db.execute(sql`DELETE FROM blocks`)
+    await db.execute(sql`DELETE FROM friendships`)
+    await db.execute(sql`DELETE FROM cards`)
+    await db.execute(sql`DELETE FROM recovery_codes`)
+    await db.execute(sql`DELETE FROM sessions`)
+    await db.execute(sql`DELETE FROM rate_limits`)
+    // Detach user-submitted products before their authors are removed, so
+    // the catalogue survives with the entries intact.
+    await db.execute(sql`UPDATE card_products SET created_by = NULL`)
+    await db.execute(sql`DELETE FROM users`)
 
     const bankRows = await db.select({ id: banks.id, code: banks.code }).from(banks)
     const bankByCode = new Map(bankRows.map((b) => [b.code, b.id]))
@@ -283,31 +285,40 @@ async function main(): Promise<void> {
     )
 
     console.log('Seeding cards...')
+    const productRows = await db
+      .select({
+        id: cardProducts.id,
+        name: cardProducts.name,
+        bankId: cardProducts.bankId,
+        cardType: cardProducts.cardType,
+      })
+      .from(cardProducts)
+
+    // Keyed by bank + type + name, which is how the seed refers to them.
+    const productByKey = new Map(
+      productRows.map((row) => [`${row.bankId}|${row.cardType}|${row.name}`, row.id]),
+    )
+
     for (const seed of CARDS) {
       const ownerId = userByKey.get(seed.owner)
       const bankId = bankByCode.get(seed.bank)
-      if (!ownerId || !bankId) throw new Error(`Bad seed row: ${seed.nickname}`)
+      if (!ownerId || !bankId) throw new Error(`Bad seed row: ${seed.product}`)
 
-      const [card] = await db
-        .insert(cards)
-        .values({
-          ownerId,
-          bankId,
-          nickname: seed.nickname,
-          variant: seed.variant ?? null,
-          cardType: seed.cardType,
-          network: seed.network,
-          bin: seed.bin,
-          last4: seed.last4,
-          expiryCt: seed.expiry ? encrypt('expiry-enc-v1', seed.expiry) : null,
-          discoverability: seed.discoverability ?? 'everyone',
-        })
-        .returning()
+      const productId = productByKey.get(`${bankId}|${seed.cardType}|${seed.product}`)
+      if (!productId) {
+        // Fail loudly: a silently skipped card would make the demo lie.
+        throw new Error(
+          `Seed references a product not in the catalogue: ${seed.bank} / ${seed.cardType} / ${seed.product}`,
+        )
+      }
 
-      await db.insert(cardSharingSettings).values({
-        cardId: card!.id,
-        fieldName: 'expiry',
-        visibility: seed.expiryVisibility ?? 'nobody',
+      await db.insert(cards).values({
+        ownerId,
+        productId,
+        network: seed.network,
+        bin: seed.bin,
+        binVisibility: seed.binVisibility ?? 'friends',
+        discoverability: seed.discoverability ?? 'everyone',
       })
     }
 
@@ -362,8 +373,8 @@ async function main(): Promise<void> {
       )
     }
     console.log('\n  Demo: sign in as Alice -> Home -> HDFC Bank -> Credit -> Visa')
-    console.log('        Rahul is a friend (expiry + call button).')
-    console.log('        Arjun is not (safe subset + friend request).\n')
+    console.log('        Rahul is a friend: BIN visible, call button.')
+    console.log('        Arjun is not, and masks his BIN entirely.\n')
   } finally {
     await client.end()
   }

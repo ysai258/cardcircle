@@ -111,7 +111,7 @@ export function CardDetailDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={card ? `${card.bank.name} ${card.nickname}` : 'Card details'}
+      title={card ? card.product.name : 'Card details'}
       description={card ? `Owned by ${card.owner.name}` : undefined}
       footer={
         visitor?.access.canSendFriendRequest ? (
@@ -141,25 +141,28 @@ export function CardDetailDialog({
       {card && (
         <div className="space-y-5">
           <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <Row label="Bank" value={card.bank.name} />
             <Row label="Type" value={cardTypeLabel(card.cardType)} />
             <Row label="Network" value={networkLabel(card.network)} />
-            <Row label="BIN" value={card.bin} numeric />
-            <Row label="Last 4" value={card.last4} numeric />
-            {card.variant && (
-              <div className="col-span-2">
-                <Row label="Variant" value={card.variant} />
+            {/* Present only when the server released it. A masked BIN is
+                absent from the payload, not blanked in it. */}
+            {card.bin ? (
+              <Row label="BIN" value={card.bin} numeric />
+            ) : (
+              <div>
+                <dt className="text-xs text-ink-muted">BIN</dt>
+                <dd className="mt-0.5 text-sm text-ink-faint">
+                  Hidden by the owner
+                </dd>
               </div>
             )}
           </dl>
 
-          {/* Expiry: present only when the server released it. */}
-          {visitor?.shared.expiry && (
-            <div className="rounded-lg border border-border-subtle bg-surface-sunken px-3 py-2.5">
-              <dt className="text-xs text-ink-muted">Expiry</dt>
-              <dd className="numeric mt-0.5 text-sm font-medium text-ink">
-                {visitor.shared.expiry}
-              </dd>
-            </div>
+          {!card.product.isVerified && (
+            <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+              This card name was added by a CardCircle user and has not been
+              reviewed.
+            </p>
           )}
 
           {/* The point of the product: reach the owner so THEY can pay. */}
@@ -202,10 +205,10 @@ export function CardDetailDialog({
             <Badge tone="accent">They sent you a friend request</Badge>
           )}
 
-          {/* Constant across every view: CardCircle has no CVV to give. */}
+          {/* Constant across every view. */}
           <p className="border-t border-border-subtle pt-4 text-xs text-ink-faint">
-            CVV is never available through CardCircle. Neither is the full card
-            number — we do not store either.
+            CardCircle stores no card number, CVV, expiry date or last-4 —
+            only which card someone holds.
           </p>
         </div>
       )}

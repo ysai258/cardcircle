@@ -23,8 +23,7 @@ import {
 
 async function scenario(
   options: {
-    expiry?: string | null
-    expiryVisibility?: 'nobody' | 'friends'
+    binVisibility?: 'nobody' | 'friends' | 'everyone'
     ownerPhoneVisibility?: 'nobody' | 'friends'
     discoverability?: 'nobody' | 'friends' | 'everyone'
   } = {},
@@ -38,8 +37,8 @@ async function scenario(
   const card = await createTestCard({
     ownerId: owner.id,
     bankId: bank.id,
-    expiry: options.expiry ?? '08/29',
-    expiryVisibility: options.expiryVisibility ?? 'friends',
+    productName: 'HDFC Millennia',
+    binVisibility: options.binVisibility ?? 'friends',
     discoverability: options.discoverability ?? 'everyone',
   })
   return { owner, viewer, bank, card }
@@ -53,20 +52,19 @@ describe('GET card detail — non-friend', () => {
     expect(view.kind).toBe('visitor')
     if (view.kind !== 'visitor') throw new Error('unreachable')
 
-    expect(view.card.bin).toBe('540123')
-    expect(view.card.last4).toBe('1234')
+    expect(view.card.product.name).toBe('HDFC Millennia')
     expect(view.card.owner.name).toBe('Rahul')
     expect(view.card.shared).toEqual({})
     expect(view.card.access.canSendFriendRequest).toBe(true)
   })
 
-  it('does not return expiry even though the owner shares it with friends', async () => {
-    const { viewer, card } = await scenario({ expiryVisibility: 'friends' })
+  it('does not return the BIN when the owner masks it', async () => {
+    const { viewer, card } = await scenario({ binVisibility: 'nobody' })
     const view = await getCardDetail(viewer.id, card.id)
 
     if (view.kind !== 'visitor') throw new Error('unreachable')
-    expect(view.card.shared.expiry).toBeUndefined()
-    expect(JSON.stringify(view)).not.toContain('08/29')
+    expect(view.card.bin).toBeUndefined()
+    expect(JSON.stringify(view)).not.toContain('540123')
   })
 
   it('does not return the phone number even when shared with friends', async () => {
@@ -82,27 +80,23 @@ describe('GET card detail — non-friend', () => {
 })
 
 describe('GET card detail — friend', () => {
-  it('returns expiry only when explicitly shared', async () => {
-    const { owner, viewer, card } = await scenario({
-      expiryVisibility: 'friends',
-    })
+  it('returns the BIN to a friend when set to friends', async () => {
+    const { owner, viewer, card } = await scenario({ binVisibility: 'friends' })
     await makeFriends(owner.id, viewer.id)
 
     const view = await getCardDetail(viewer.id, card.id)
     if (view.kind !== 'visitor') throw new Error('unreachable')
-    expect(view.card.shared.expiry).toBe('08/29')
+    expect(view.card.bin).toBe('540123')
   })
 
-  it('withholds expiry when the owner has not shared it', async () => {
-    const { owner, viewer, card } = await scenario({
-      expiryVisibility: 'nobody',
-    })
+  it('withholds the BIN from a friend when the owner masked it', async () => {
+    const { owner, viewer, card } = await scenario({ binVisibility: 'nobody' })
     await makeFriends(owner.id, viewer.id)
 
     const view = await getCardDetail(viewer.id, card.id)
     if (view.kind !== 'visitor') throw new Error('unreachable')
-    expect(view.card.shared.expiry).toBeUndefined()
-    expect(JSON.stringify(view)).not.toContain('08/29')
+    expect(view.card.bin).toBeUndefined()
+    expect(JSON.stringify(view)).not.toContain('540123')
   })
 
   it('returns the phone number only when the owner opted in', async () => {
@@ -185,7 +179,7 @@ describe('Ownership', () => {
     const { viewer, card } = await scenario()
 
     await expect(
-      updateCard(viewer.id, card.id, { nickname: 'Hijacked' }),
+      updateCard(viewer.id, card.id, { bin: '999999' }),
     ).rejects.toThrow(/not found/i)
   })
 
@@ -194,7 +188,7 @@ describe('Ownership', () => {
     await makeFriends(owner.id, viewer.id)
 
     await expect(
-      updateCard(viewer.id, card.id, { nickname: 'Hijacked' }),
+      updateCard(viewer.id, card.id, { bin: '999999' }),
     ).rejects.toThrow(/not found/i)
   })
 
@@ -211,7 +205,7 @@ describe('Ownership', () => {
 describe('No response ever carries a forbidden field', () => {
   it('holds for owner, friend and stranger views alike', async () => {
     const { owner, viewer, card } = await scenario({
-      expiryVisibility: 'friends',
+      binVisibility: 'everyone',
       ownerPhoneVisibility: 'friends',
     })
 
@@ -233,8 +227,6 @@ describe('No response ever carries a forbidden field', () => {
     const json = JSON.stringify(view)
 
     for (const column of [
-      'expiryCt',
-      'expiry_ct',
       'phoneCt',
       'phone_ct',
       'phoneHmac',

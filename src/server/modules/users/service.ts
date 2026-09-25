@@ -1,11 +1,23 @@
 import 'server-only'
 import { and, asc, count, eq } from 'drizzle-orm'
 import { db } from '@/db'
-import { banks, cards, users, type Visibility } from '@/db/schema'
-import { AppError, ERROR_CODES, notFound } from '@/server/common/errors'
+import { banks, cardProducts, cards, users, type Visibility } from '@/db/schema'
+import {
+  AppError,
+  conflict,
+  ERROR_CODES,
+  notFound,
+  validationFailed,
+} from '@/server/common/errors'
 import { enforceRateLimit } from '@/server/common/rate-limit'
 import { verifyPassword } from '@/server/crypto/password'
-import { decryptPhone, maskPhone, normalizePhone, phoneHmac } from '@/server/crypto/phone'
+import {
+  decryptPhone,
+  encryptPhone,
+  maskPhone,
+  normalizePhone,
+  phoneHmac,
+} from '@/server/crypto/phone'
 import { recordAuditEvent } from '@/server/modules/audit/service'
 import { discoverableByRequester } from '@/server/modules/cards/discovery-predicate'
 import type { Relationship } from '@/server/modules/cards/dto'
@@ -118,7 +130,8 @@ export async function getUserProfile(
             cardCount: count(cards.id),
           })
           .from(banks)
-          .innerJoin(cards, eq(cards.bankId, banks.id))
+          .innerJoin(cardProducts, eq(cardProducts.bankId, banks.id))
+          .innerJoin(cards, eq(cards.productId, cardProducts.id))
           .where(eq(cards.ownerId, userId))
           .groupBy(banks.id, banks.name, banks.code)
           .orderBy(asc(banks.name))
@@ -130,7 +143,8 @@ export async function getUserProfile(
             cardCount: count(cards.id),
           })
           .from(banks)
-          .innerJoin(cards, eq(cards.bankId, banks.id))
+          .innerJoin(cardProducts, eq(cardProducts.bankId, banks.id))
+          .innerJoin(cards, eq(cards.productId, cardProducts.id))
           .innerJoin(users, eq(users.id, cards.ownerId))
           .where(
             and(
@@ -259,4 +273,98 @@ export async function deleteAccount(
   })
 
   await db.delete(users).where(eq(users.id, userId))
+}
+
+
+/**
+ * Changes the caller's mobile number.
+ *
+ * The number is this account's identity and its friend-lookup key, so this
+ * is more than a profile edit:
+ *
+ *   - the password is required again, because someone with a borrowed
+ *     session could otherwise move an account to a number they control;
+ *   - the new number must be unused, enforced by the unique index on the
+ *     HMAC rather than a read-then-write that could race;
+ *   - the HMAC, ciphertext, country code and last four are all rewritten
+ *     together, since a half-updated set would make the account unfindable;
+ *   - friends keep their friendships — they are by user id, not number —
+ *     but anyone holding only the OLD number can no longer find the account.
+ */
+export async function changePhoneNumber(input: {
+  userId: string
+  newPhone: string
+  password: string
+}): Promise<{ masked: string }> {
+  const [user] = await db
+    .select({ id: users.id, passwordHash: users.passwordHash })
+    .from(users)
+    .where(eq(users.id, input.userId))
+    .limit(1)
+
+  if (!user) throw notFound('User')
+
+  if (!(await verifyPassword(user.passwordHash, input.password))) {
+    throw new AppError(
+      ERROR_CODES.UNAUTHENTICATED,
+      'That password is not correct.',
+    )
+  }
+
+  const phone = normalizePhone(input.newPhone)
+  if (!phone) {
+    throw validationFailed('Enter a valid mobile number', [
+      { field: 'newPhone', messages: ['Enter a valid mobile number'] },
+    ])
+  }
+
+  try {
+    await db
+      .update(users)
+      .set({
+        phoneHmac: phoneHmac(phone.e164),
+        phoneCt: encryptPhone(phone.e164),
+        phoneCountryCode: phone.countryCode,
+        phoneLast4: phone.last4,
+        // A changed number is unverified again — not that this build
+        // verifies any number, but the column must not imply otherwise.
+        phoneVerifiedAt: null,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, input.userId))
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw conflict('That mobile number is already in use')
+    }
+    throw error
+  }
+
+  await recordAuditEvent({
+    action: 'phone_changed',
+    actorUserId: input.userId,
+    resourceType: 'user',
+    resourceId: input.userId,
+    // The number itself is never recorded here.
+    metadata: { last4: phone.last4 },
+  })
+
+  return { masked: maskPhone(phone.countryCode, phone.last4) }
+}
+
+/**
+ * Detects a Postgres unique-violation (SQLSTATE 23505).
+ *
+ * Walks the `cause` chain: Drizzle wraps failures in a DrizzleQueryError and
+ * hangs the real PostgresError off `cause`, so reading only the top-level
+ * code misses it — as it once did for duplicate registrations, which
+ * surfaced as a 500 instead of a conflict.
+ */
+function isUniqueViolation(error: unknown): boolean {
+  let current: unknown = error
+  for (let depth = 0; current !== null && depth < 5; depth += 1) {
+    if (typeof current !== 'object') return false
+    if ((current as { code?: string }).code === '23505') return true
+    current = (current as { cause?: unknown }).cause
+  }
+  return false
 }

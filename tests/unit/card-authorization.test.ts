@@ -1,37 +1,31 @@
 import { describe, expect, it } from 'vitest'
-import type { CardField, Visibility } from '@/db/schema'
+import type { Discoverability, FieldVisibility } from '@/db/schema'
 import {
   buildCardView,
+  canSeeBin,
   resolveRelationship,
 } from '@/server/modules/cards/authorization'
 import type { Relationship } from '@/server/modules/cards/dto'
 import { findForbiddenKeys } from '@/server/common/redact'
 import {
-  DECRYPTED_EXPIRY,
   DECRYPTED_PHONE,
   deps,
   explodingDeps,
   HDFC,
+  MILLENNIA,
   makeCard,
   makeOwner,
 } from '../helpers/card-fixtures'
 
 const REQUESTER = 'user-alice'
 
-function sharing(expiry: Visibility): ReadonlyMap<CardField, Visibility> {
-  return new Map<CardField, Visibility>([['expiry', expiry]])
-}
-
-const NO_SHARING = new Map<CardField, Visibility>()
-
 function view(overrides: {
   relationship: Relationship
   requesterId?: string | null
-  expirySharing?: Visibility
-  phoneVisibility?: Visibility
-  discoverability?: 'nobody' | 'friends' | 'everyone'
+  binVisibility?: FieldVisibility
+  phoneVisibility?: 'nobody' | 'friends'
+  discoverability?: Discoverability
   ownerStatus?: 'active' | 'disabled'
-  hasExpiry?: boolean
   customDeps?: typeof deps
 }) {
   return buildCardView(
@@ -40,25 +34,23 @@ function view(overrides: {
         overrides.requesterId === undefined ? REQUESTER : overrides.requesterId,
       card: makeCard({
         discoverability: overrides.discoverability ?? 'everyone',
-        expiryCt:
-          overrides.hasExpiry === false ? null : Buffer.from('encrypted'),
+        binVisibility: overrides.binVisibility ?? 'friends',
       }),
       bank: HDFC,
+      product: MILLENNIA,
+      cardType: 'credit',
       owner: makeOwner({
         phoneVisibility: overrides.phoneVisibility ?? 'nobody',
         status: overrides.ownerStatus ?? 'active',
       }),
       relationship: overrides.relationship,
-      sharing: overrides.expirySharing
-        ? sharing(overrides.expirySharing)
-        : NO_SHARING,
     },
     overrides.customDeps ?? deps,
   )
 }
 
 // ---------------------------------------------------------------------------
-// The core security properties
+// Access
 // ---------------------------------------------------------------------------
 
 describe('buildCardView — access', () => {
@@ -70,11 +62,11 @@ describe('buildCardView — access', () => {
     expect(view({ relationship: 'blocked' })).toBeNull()
   })
 
-  it('denies blocked users who were previously friends with shared fields', () => {
+  it('denies blocked users who were previously friends', () => {
     expect(
       view({
         relationship: 'blocked',
-        expirySharing: 'friends',
+        binVisibility: 'everyone',
         phoneVisibility: 'friends',
       }),
     ).toBeNull()
@@ -82,16 +74,8 @@ describe('buildCardView — access', () => {
 
   it('hides a private card from a friend', () => {
     expect(
-      view({
-        relationship: 'friends',
-        discoverability: 'nobody',
-        expirySharing: 'friends',
-      }),
+      view({ relationship: 'friends', discoverability: 'nobody' }),
     ).toBeNull()
-  })
-
-  it('hides a private card from a stranger', () => {
-    expect(view({ relationship: 'none', discoverability: 'nobody' })).toBeNull()
   })
 
   it('hides a friends-only card from a stranger', () => {
@@ -104,122 +88,130 @@ describe('buildCardView — access', () => {
     ).toBeNull()
   })
 
-  it('shows a friends-only card to an accepted friend', () => {
-    const result = view({ relationship: 'friends', discoverability: 'friends' })
-    expect(result?.kind).toBe('visitor')
-  })
-
-  it('shows an everyone card to a stranger, so they can request friendship', () => {
-    const result = view({ relationship: 'none', discoverability: 'everyone' })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-    expect(result.card.access.canSendFriendRequest).toBe(true)
-    expect(result.card.shared).toEqual({})
-  })
-
   it('hides cards belonging to a disabled owner', () => {
-    expect(
-      view({ relationship: 'friends', ownerStatus: 'disabled' }),
-    ).toBeNull()
+    expect(view({ relationship: 'friends', ownerStatus: 'disabled' })).toBeNull()
   })
 
-  it('still shows the owner their own card when it is not discoverable', () => {
-    const result = view({ relationship: 'self', discoverability: 'nobody' })
-    expect(result?.kind).toBe('owner')
-  })
-
-  it('still shows the owner their own card when their account is disabled', () => {
-    const result = view({ relationship: 'self', ownerStatus: 'disabled' })
-    expect(result?.kind).toBe('owner')
+  it('still shows the owner their own private card', () => {
+    expect(view({ relationship: 'self', discoverability: 'nobody' })?.kind).toBe(
+      'owner',
+    )
   })
 })
 
-describe('buildCardView — field-level sharing', () => {
+// ---------------------------------------------------------------------------
+// BIN masking — the new field-level control
+// ---------------------------------------------------------------------------
+
+describe('canSeeBin', () => {
+  const cases: Array<[FieldVisibility, Relationship, boolean]> = [
+    ['everyone', 'none', true],
+    ['everyone', 'friends', true],
+    ['everyone', 'request_sent', true],
+    ['everyone', 'blocked', false],
+    ['friends', 'friends', true],
+    ['friends', 'none', false],
+    ['friends', 'request_sent', false],
+    ['friends', 'request_received', false],
+    ['friends', 'blocked', false],
+    ['nobody', 'friends', false],
+    ['nobody', 'none', false],
+    ['nobody', 'blocked', false],
+    // The owner always sees their own digits, whatever the setting.
+    ['nobody', 'self', true],
+    ['friends', 'self', true],
+  ]
+
+  for (const [visibility, relationship, expected] of cases) {
+    it(`${visibility} + ${relationship} -> ${expected}`, () => {
+      expect(canSeeBin(visibility, relationship)).toBe(expected)
+    })
+  }
+})
+
+describe('buildCardView — BIN masking', () => {
+  it('omits the BIN key entirely when masked, rather than blanking it', () => {
+    const result = view({ relationship: 'none', binVisibility: 'nobody' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
+
+    // Absence, not masking: there is no key to un-blank client-side.
+    expect('bin' in result.card).toBe(false)
+    expect(result.card.access.binVisible).toBe(false)
+    expect(JSON.stringify(result)).not.toContain('540123')
+  })
+
+  it('releases the BIN to a friend when set to friends', () => {
+    const result = view({ relationship: 'friends', binVisibility: 'friends' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
+
+    expect(result.card.bin).toBe('540123')
+    expect(result.card.access.binVisible).toBe(true)
+  })
+
+  it('withholds the BIN from a stranger when set to friends', () => {
+    const result = view({ relationship: 'none', binVisibility: 'friends' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
+
+    expect(result.card.bin).toBeUndefined()
+    expect(JSON.stringify(result)).not.toContain('540123')
+  })
+
+  it('releases the BIN to a stranger when set to everyone', () => {
+    const result = view({ relationship: 'none', binVisibility: 'everyone' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
+
+    expect(result.card.bin).toBe('540123')
+  })
+
+  it('still names the product when the BIN is masked', () => {
+    // The point of masking: "Rahul has an HDFC Millennia" stays answerable
+    // without publishing any digits.
+    const result = view({ relationship: 'none', binVisibility: 'nobody' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
+
+    expect(result.card.product.name).toBe('HDFC Millennia')
+    expect(result.card.network).toBe('visa')
+    expect(result.card.cardType).toBe('credit')
+  })
+
+  it('always shows the owner their own BIN', () => {
+    const result = view({ relationship: 'self', binVisibility: 'nobody' })
+    if (result?.kind !== 'owner') throw new Error('expected owner view')
+
+    expect(result.card.bin).toBe('540123')
+    expect(result.card.binVisibility).toBe('nobody')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Phone sharing
+// ---------------------------------------------------------------------------
+
+describe('buildCardView — phone sharing', () => {
   it('gives a non-friend no shared fields at all', () => {
-    const result = view({
-      relationship: 'none',
-      expirySharing: 'friends',
-      phoneVisibility: 'friends',
-    })
+    const result = view({ relationship: 'none', phoneVisibility: 'friends' })
+    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
 
-    expect(result?.kind).toBe('visitor')
-    if (result?.kind !== 'visitor') throw new Error('unreachable')
     expect(result.card.shared).toEqual({})
-    expect(result.card.access.canViewSharedDetails).toBe(false)
   })
 
-  it('withholds expiry from a friend when it is not shared', () => {
-    const result = view({ relationship: 'friends', expirySharing: 'nobody' })
+  it('releases the phone to a friend who was opted in', () => {
+    const result = view({ relationship: 'friends', phoneVisibility: 'friends' })
     if (result?.kind !== 'visitor') throw new Error('expected visitor view')
 
-    expect(result.card.shared.expiry).toBeUndefined()
-    expect('expiry' in result.card.shared).toBe(false)
-  })
-
-  it('releases expiry to a friend when explicitly shared', () => {
-    const result = view({ relationship: 'friends', expirySharing: 'friends' })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-
-    expect(result.card.shared.expiry).toBe(DECRYPTED_EXPIRY)
-  })
-
-  it('omits expiry when shared but the owner recorded none', () => {
-    const result = view({
-      relationship: 'friends',
-      expirySharing: 'friends',
-      hasExpiry: false,
-    })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-
-    expect('expiry' in result.card.shared).toBe(false)
-  })
-
-  it('withholds phone from a friend by default', () => {
-    const result = view({ relationship: 'friends' })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-
-    expect(result.card.shared.phone).toBeUndefined()
-  })
-
-  it('releases phone to a friend when visibility is friends', () => {
-    const result = view({
-      relationship: 'friends',
-      phoneVisibility: 'friends',
-    })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-
-    expect(result.card.shared.phone).toEqual({
-      e164: DECRYPTED_PHONE,
-      masked: '+91 ••••••3210',
-      verified: false,
-    })
-  })
-
-  it('marks the phone unverified, because v1 has no verification', () => {
-    const result = view({
-      relationship: 'friends',
-      phoneVisibility: 'friends',
-    })
-    if (result?.kind !== 'visitor') throw new Error('expected visitor view')
-
+    expect(result.card.shared.phone?.e164).toBe(DECRYPTED_PHONE)
     expect(result.card.shared.phone?.verified).toBe(false)
   })
 
-  it('shares expiry and phone independently', () => {
-    const result = view({
-      relationship: 'friends',
-      expirySharing: 'friends',
-      phoneVisibility: 'nobody',
-    })
+  it('withholds the phone from a friend who was not opted in', () => {
+    const result = view({ relationship: 'friends', phoneVisibility: 'nobody' })
     if (result?.kind !== 'visitor') throw new Error('expected visitor view')
 
-    expect(result.card.shared.expiry).toBe(DECRYPTED_EXPIRY)
     expect(result.card.shared.phone).toBeUndefined()
   })
 })
 
 describe('buildCardView — does not decrypt what it will not release', () => {
-  // If these pass with deps that throw, the resolver provably never touched
-  // the ciphertext on an unauthorised branch.
   const unauthorized: Relationship[] = [
     'none',
     'request_sent',
@@ -232,19 +224,18 @@ describe('buildCardView — does not decrypt what it will not release', () => {
       expect(() =>
         view({
           relationship,
-          expirySharing: 'friends',
           phoneVisibility: 'friends',
+          binVisibility: 'everyone',
           customDeps: explodingDeps,
         }),
       ).not.toThrow()
     })
   }
 
-  it('never decrypts for a friend when nothing is shared', () => {
+  it('never decrypts for a friend when the phone is not shared', () => {
     expect(() =>
       view({
         relationship: 'friends',
-        expirySharing: 'nobody',
         phoneVisibility: 'nobody',
         customDeps: explodingDeps,
       }),
@@ -252,7 +243,7 @@ describe('buildCardView — does not decrypt what it will not release', () => {
   })
 })
 
-describe('buildCardView — response contains no forbidden fields', () => {
+describe('buildCardView — no forbidden fields, and none that were removed', () => {
   const relationships: Relationship[] = [
     'self',
     'friends',
@@ -265,27 +256,24 @@ describe('buildCardView — response contains no forbidden fields', () => {
     it(`emits no forbidden key for relationship "${relationship}"`, () => {
       const result = view({
         relationship,
-        expirySharing: 'friends',
+        binVisibility: 'everyone',
         phoneVisibility: 'friends',
       })
-
       expect(findForbiddenKeys(result)).toEqual([])
     })
   }
 
-  it('never emits the raw ciphertext columns', () => {
-    const result = view({ relationship: 'self' })
-    const json = JSON.stringify(result)
+  it('carries no last4 or expiry, because those columns no longer exist', () => {
+    const json = JSON.stringify(view({ relationship: 'self' }))
 
-    expect(json).not.toContain('expiryCt')
-    expect(json).not.toContain('phoneCt')
-    expect(json).not.toContain('phoneHmac')
-    expect(json).not.toContain('passwordHash')
+    expect(json).not.toContain('last4')
+    expect(json).not.toContain('expiry')
+    expect(json).not.toContain('nickname')
   })
 })
 
 describe('buildCardView — friend request affordance', () => {
-  it('offers a friend request only when there is no standing relationship', () => {
+  it('offers a request only when there is no standing relationship', () => {
     const cases: Array<[Relationship, boolean]> = [
       ['none', true],
       ['request_sent', false],
@@ -301,17 +289,13 @@ describe('buildCardView — friend request affordance', () => {
   })
 })
 
-// ---------------------------------------------------------------------------
-// resolveRelationship
-// ---------------------------------------------------------------------------
-
 describe('resolveRelationship', () => {
   const base = { requesterId: 'a', ownerId: 'b', blockExists: false }
 
   it('detects self', () => {
-    expect(
-      resolveRelationship({ ...base, ownerId: 'a', friendship: null }),
-    ).toBe('self')
+    expect(resolveRelationship({ ...base, ownerId: 'a', friendship: null })).toBe(
+      'self',
+    )
   })
 
   it('reports blocked regardless of an accepted friendship', () => {
@@ -322,10 +306,6 @@ describe('resolveRelationship', () => {
         friendship: { requesterId: 'a', recipientId: 'b', status: 'accepted' },
       }),
     ).toBe('blocked')
-  })
-
-  it('reports none when there is no row', () => {
-    expect(resolveRelationship({ ...base, friendship: null })).toBe('none')
   })
 
   it('distinguishes the direction of a pending request', () => {

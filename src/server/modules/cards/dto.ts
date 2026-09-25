@@ -1,17 +1,12 @@
-import type {
-  CardNetwork,
-  CardType,
-  Discoverability,
-  Visibility,
-} from '@/db/schema'
+import type { CardNetwork, CardType, Discoverability, FieldVisibility } from '@/db/schema'
 
 /**
  * Response shapes.
  *
  * Every DTO here is built by explicit field assignment in
- * ./authorization.ts. Nothing spreads a database row. If a column is added
- * to the schema tomorrow, it appears in no response until someone writes a
- * line of code putting it there.
+ * ./authorization.ts. Nothing spreads a database row, so a column added
+ * tomorrow appears in no response until someone writes a line putting it
+ * there.
  */
 
 export type OwnerDTO = {
@@ -26,34 +21,37 @@ export type BankDTO = {
   logoUrl: string | null
 }
 
+export type ProductDTO = {
+  id: string
+  name: string
+  /** False for products a user added via "Other", pending review. */
+  isVerified: boolean
+}
+
 /**
- * The safe subset. Everything in here is discovery information that any
- * authorised viewer may see.
+ * The safe subset.
  *
- * DESIGN INVARIANT: this type has no field for expiry or phone, and must
- * never gain one. List endpoints return only this shape, which means no
- * amount of getting a list query wrong can leak a sensitive field — there
- * is nowhere in the type to put it.
+ * `bin` is OPTIONAL, and that is the whole point of BIN masking: when a
+ * viewer is not entitled to the digits the key is absent from the payload
+ * rather than blanked. The card is then known only as, say, "Airtel Axis
+ * Bank · Credit · Visa", which is enough to answer an offer question
+ * without publishing six digits of anyone's card.
+ *
+ * There is deliberately no field here for a last-4 or an expiry date. Those
+ * columns no longer exist: under this product's framing your friend makes
+ * the purchase, so nobody ever needs them.
  */
 export type CardSummaryDTO = {
   id: string
   bank: BankDTO
+  product: ProductDTO
   cardType: CardType
   network: CardNetwork
-  bin: string
-  last4: string
-  nickname: string
-  variant: string | null
+  /** Present only when the viewer may see it. */
+  bin?: string
   owner: OwnerDTO
 }
 
-/**
- * How the requester stands relative to the card's owner.
- *
- * `none` and the two pending states are all "not friends" for access
- * purposes, but the UI needs to tell them apart to decide whether to render
- * "Send request", "Request sent", or "Respond to request".
- */
 export type Relationship =
   | 'self'
   | 'friends'
@@ -66,6 +64,8 @@ export type CardAccessDTO = {
   relationship: Relationship
   canViewSharedDetails: boolean
   canSendFriendRequest: boolean
+  /** Whether the BIN was released to this viewer. */
+  binVisible: boolean
 }
 
 export type SharedPhoneDTO = {
@@ -80,15 +80,7 @@ export type SharedPhoneDTO = {
   verified: boolean
 }
 
-/**
- * Fields released only on explicit owner opt-in.
- *
- * Absent keys mean "not shared". The API omits them rather than sending
- * null, so a client cannot distinguish "owner has no expiry recorded" from
- * "owner did not share it" — both are simply not there.
- */
 export type CardSharedFieldsDTO = {
-  expiry?: string
   phone?: SharedPhoneDTO
 }
 
@@ -100,19 +92,13 @@ export type CardDetailDTO = CardSummaryDTO & {
 
 /** What the owner sees of their own card: everything, plus the controls. */
 export type OwnCardDTO = CardSummaryDTO & {
+  bin: string
+  binVisibility: FieldVisibility
   discoverability: Discoverability
-  expiry: string | null
-  sharing: Record<'expiry', Visibility>
   createdAt: string
   updatedAt: string
 }
 
-/**
- * The result of an authorisation decision.
- *
- * `null` from the resolver means "this requester gets a 404" — whether the
- * card is private, the owner blocked them, or it does not exist.
- */
 export type CardView =
   | { kind: 'owner'; card: OwnCardDTO }
   | { kind: 'visitor'; card: CardDetailDTO }

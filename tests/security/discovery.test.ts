@@ -30,19 +30,19 @@ describe('Private cards are excluded from discovery queries', () => {
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Public',
+      productName: 'Public Card',
       discoverability: 'everyone',
     })
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Private',
+      productName: 'Private Card',
       discoverability: 'nobody',
     })
 
     const listing = await listCardsByBank(viewer.id, bank.id, FILTERS)
     expect(listing.items).toHaveLength(1)
-    expect(listing.items[0]?.nickname).toBe('Public')
+    expect(listing.items[0]?.product.name).toBe('Public Card')
     expect(listing.total).toBe(1)
 
     const banks = await listBanksWithCounts(viewer.id)
@@ -59,7 +59,7 @@ describe('Private cards are excluded from discovery queries', () => {
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Friends Only',
+      productName: 'Friends Only Card',
       discoverability: 'friends',
     })
 
@@ -114,7 +114,7 @@ describe('Disabled accounts drop out of discovery', () => {
 })
 
 describe('Listings never carry sensitive fields', () => {
-  it('omits expiry and phone even for a friend who is shared both', async () => {
+  it('omits the phone, and the BIN when it is masked', async () => {
     const owner = await createTestUser({ phoneVisibility: 'friends' })
     const friend = await createTestUser()
     await makeFriends(owner.id, friend.id)
@@ -123,18 +123,105 @@ describe('Listings never carry sensitive fields', () => {
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      expiry: '08/29',
-      expiryVisibility: 'friends',
+      bin: '540123',
+      binVisibility: 'nobody',
     })
 
     const listing = await listCardsByBank(friend.id, bank.id, FILTERS)
     const json = JSON.stringify(listing)
 
     expect(listing.items).toHaveLength(1)
-    expect(json).not.toContain('08/29')
+    expect(listing.items[0]?.bin).toBeUndefined()
+    expect(json).not.toContain('540123')
     expect(json).not.toContain(owner.phone)
-    expect(json).not.toContain('shared')
-    expect(listing.items[0]).not.toHaveProperty('shared')
+  })
+
+  it('includes the BIN when the owner shares it with everyone', async () => {
+    const owner = await createTestUser()
+    const viewer = await createTestUser()
+    const bank = await createTestBank()
+    await createTestCard({
+      ownerId: owner.id,
+      bankId: bank.id,
+      bin: '540123',
+      binVisibility: 'everyone',
+    })
+
+    const listing = await listCardsByBank(viewer.id, bank.id, FILTERS)
+    expect(listing.items[0]?.bin).toBe('540123')
+  })
+})
+
+describe('BIN search cannot be used as an oracle', () => {
+  // Masking the BIN has to hide it from SEARCH as well as from display.
+  // Otherwise anyone could guess six digits, see whose card matched, and
+  // learn exactly the value the mask was hiding.
+  it('does not find a card by a BIN the searcher may not see', async () => {
+    const owner = await createTestUser()
+    const stranger = await createTestUser()
+    const bank = await createTestBank()
+
+    await createTestCard({
+      ownerId: owner.id,
+      bankId: bank.id,
+      bin: '540123',
+      binVisibility: 'nobody',
+    })
+
+    // The card IS discoverable — it shows up unfiltered...
+    expect(
+      (await listCardsByBank(stranger.id, bank.id, FILTERS)).total,
+    ).toBe(1)
+
+    // ...but searching its exact BIN must not confirm that BIN.
+    expect(
+      (await listCardsByBank(stranger.id, bank.id, { ...FILTERS, bin: '540123' }))
+        .total,
+    ).toBe(0)
+  })
+
+  it('does not let a non-friend search a friends-only BIN', async () => {
+    const owner = await createTestUser()
+    const stranger = await createTestUser()
+    const friend = await createTestUser()
+    await makeFriends(owner.id, friend.id)
+
+    const bank = await createTestBank()
+    await createTestCard({
+      ownerId: owner.id,
+      bankId: bank.id,
+      bin: '540123',
+      binVisibility: 'friends',
+    })
+
+    expect(
+      (await listCardsByBank(stranger.id, bank.id, { ...FILTERS, bin: '5401' }))
+        .total,
+    ).toBe(0)
+
+    // The friend, who may see it, can search it.
+    expect(
+      (await listCardsByBank(friend.id, bank.id, { ...FILTERS, bin: '5401' }))
+        .total,
+    ).toBe(1)
+  })
+
+  it('finds a card by BIN when the owner shares it with everyone', async () => {
+    const owner = await createTestUser()
+    const stranger = await createTestUser()
+    const bank = await createTestBank()
+
+    await createTestCard({
+      ownerId: owner.id,
+      bankId: bank.id,
+      bin: '540123',
+      binVisibility: 'everyone',
+    })
+
+    expect(
+      (await listCardsByBank(stranger.id, bank.id, { ...FILTERS, bin: '5401' }))
+        .total,
+    ).toBe(1)
   })
 })
 
@@ -147,14 +234,14 @@ describe('Filters and pagination', () => {
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Visa Credit',
+      productName: 'Visa Credit Card',
       cardType: 'credit',
       network: 'visa',
     })
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'RuPay Debit',
+      productName: 'RuPay Debit Card',
       cardType: 'debit',
       network: 'rupay',
       bin: '607412',
@@ -164,13 +251,13 @@ describe('Filters and pagination', () => {
       ...FILTERS,
       cardType: 'credit',
     })
-    expect(credit.items.map((c) => c.nickname)).toEqual(['Visa Credit'])
+    expect(credit.items.map((c) => c.product.name)).toEqual(['Visa Credit Card'])
 
     const rupay = await listCardsByBank(viewer.id, bank.id, {
       ...FILTERS,
       network: 'rupay',
     })
-    expect(rupay.items.map((c) => c.nickname)).toEqual(['RuPay Debit'])
+    expect(rupay.items.map((c) => c.product.name)).toEqual(['RuPay Debit Card'])
   })
 
   it('matches BIN by prefix', async () => {
@@ -181,25 +268,27 @@ describe('Filters and pagination', () => {
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Match',
+      productName: 'Match Card',
       bin: '540123',
+      binVisibility: 'everyone',
     })
     await createTestCard({
       ownerId: owner.id,
       bankId: bank.id,
-      nickname: 'Other',
+      productName: 'Other Card',
       bin: '512345',
+      binVisibility: 'everyone',
     })
 
     expect(
       (await listCardsByBank(viewer.id, bank.id, { ...FILTERS, bin: '5401' }))
-        .items.map((c) => c.nickname),
-    ).toEqual(['Match'])
+        .items.map((c) => c.product.name),
+    ).toEqual(['Match Card'])
 
     expect(
       (await listCardsByBank(viewer.id, bank.id, { ...FILTERS, bin: '540123' }))
-        .items.map((c) => c.nickname),
-    ).toEqual(['Match'])
+        .items.map((c) => c.product.name),
+    ).toEqual(['Match Card'])
 
     expect(
       (await listCardsByBank(viewer.id, bank.id, { ...FILTERS, bin: '9' }))
@@ -216,7 +305,7 @@ describe('Filters and pagination', () => {
       await createTestCard({
         ownerId: owner.id,
         bankId: bank.id,
-        nickname: `Card ${String(i).padStart(2, '0')}`,
+        productName: `Card ${String(i).padStart(2, '0')}`,
       })
     }
 

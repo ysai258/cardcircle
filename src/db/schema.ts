@@ -91,8 +91,19 @@ export const discoverabilityEnum = pgEnum('discoverability', [
   'everyone',
 ])
 
-/** Card fields whose visibility is individually controllable. */
-export const cardFieldEnum = pgEnum('card_field', ['expiry'])
+/**
+ * Who may see an individually-controllable field.
+ *
+ * Three values, unlike `visibility`, because BIN masking genuinely needs
+ * "everyone": a user may be happy for any signed-in person to see their
+ * card's BIN, or restrict it to friends, or hide it entirely and let their
+ * card be known only as "Airtel Axis Credit Card".
+ */
+export const fieldVisibilityEnum = pgEnum('field_visibility', [
+  'nobody',
+  'friends',
+  'everyone',
+])
 
 export const friendshipStatusEnum = pgEnum('friendship_status', [
   'pending',
@@ -129,6 +140,8 @@ export const auditActionEnum = pgEnum('audit_action', [
   'recovery_codes_generated',
   'password_reset',
   'account_deleted',
+  'card_product_created',
+  'phone_changed',
 ])
 
 // ---------------------------------------------------------------------------
@@ -193,6 +206,57 @@ export const banks = pgTable(
   (table) => [uniqueIndex('banks_code_unique').on(table.code)],
 )
 
+/**
+ * The catalogue of real card products.
+ *
+ * Cards reference a product instead of carrying a free-text nickname,
+ * because the question this app answers names a product: an offer says "10%
+ * on Airtel Axis", not "10% on whatever you call your card". Matching
+ * nicknames would never answer it reliably.
+ *
+ * Seeded from a curated list (migration 0004) and extended by users through
+ * the "Other" option. A user-added row is `isVerified: false` and carries
+ * `createdBy`, so additions are attributable and reviewable — this table is
+ * shared, and an unmoderated free-text field that every other user then sees
+ * in a dropdown is an abuse vector.
+ */
+export const cardProducts = pgTable(
+  'card_products',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    bankId: uuid('bank_id')
+      .notNull()
+      .references(() => banks.id, { onDelete: 'cascade' }),
+    cardType: cardTypeEnum('card_type').notNull(),
+
+    /** Display name, e.g. "Airtel Axis Bank". */
+    name: text('name').notNull(),
+    /**
+     * Canonical key for uniqueness. See product-slug.ts — it spells out `+`
+     * so "Power" and "Power+" stay distinct.
+     */
+    slug: text('slug').notNull(),
+
+    /** False for anything a user added via "Other", until reviewed. */
+    isVerified: boolean('is_verified').notNull().default(false),
+    createdBy: uuid('created_by').references(() => users.id, {
+      onDelete: 'set null',
+    }),
+    ...timestamps,
+  },
+  (table) => [
+    uniqueIndex('card_products_unique').on(
+      table.bankId,
+      table.cardType,
+      table.slug,
+    ),
+    // The picker's query: products for one bank and card type.
+    index('card_products_bank_type_idx').on(table.bankId, table.cardType),
+    // Cross-bank product search on the home page.
+    index('card_products_slug_idx').on(sql`${table.slug} text_pattern_ops`),
+  ],
+)
+
 export const cards = pgTable(
   'cards',
   {
@@ -200,13 +264,19 @@ export const cards = pgTable(
     ownerId: uuid('owner_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    bankId: uuid('bank_id')
-      .notNull()
-      .references(() => banks.id, { onDelete: 'restrict' }),
 
-    nickname: text('nickname').notNull(),
-    variant: text('variant'),
-    cardType: cardTypeEnum('card_type').notNull(),
+    /**
+     * The product this card is. Bank and card type are read from here rather
+     * than duplicated onto the card, so the two can never disagree.
+     */
+    productId: uuid('product_id')
+      .notNull()
+      .references(() => cardProducts.id, { onDelete: 'restrict' }),
+
+    /**
+     * Network stays on the card, not the product: the same product is issued
+     * on different networks (SBI SimplyCLICK comes as Visa and Mastercard).
+     */
     network: cardNetworkEnum('network').notNull(),
 
     /**
@@ -215,19 +285,19 @@ export const cards = pgTable(
      * `text` rather than `char(6)`: bpchar pads with spaces on comparison,
      * which silently breaks exact BIN matching, and it rejects the
      * text_pattern_ops operator class needed for indexed prefix search. The
-     * CHECK constraint below enforces the length and digits instead — which
-     * char(6) never did, since it would happily store 'abcdef'.
+     * CHECK constraint enforces length and digits instead — which char(6)
+     * never did, since it would happily store 'abcdef'.
      */
     bin: text('bin').notNull(),
-    /** Last four digits. The only part of the PAN users recognise. */
-    last4: text('last4').notNull(),
 
     /**
-     * AES-256-GCM("MM/YY"). Nullable — most users will not supply it.
-     * Released only when card_sharing_settings says 'friends' AND the
-     * requester is an accepted friend.
+     * Who may see the BIN. Defaults to friends: the product name alone
+     * answers most offer questions, so the digits are opt-in rather than
+     * shared by default.
      */
-    expiryCt: bytea('expiry_ct'),
+    binVisibility: fieldVisibilityEnum('bin_visibility')
+      .notNull()
+      .default('friends'),
 
     discoverability: discoverabilityEnum('discoverability')
       .notNull()
@@ -235,44 +305,12 @@ export const cards = pgTable(
     ...timestamps,
   },
   (table) => [
-    // My Cards, and owner-scoped authorisation checks.
     index('cards_owner_idx').on(table.ownerId),
-    // Bank page listing + home counts. Leftmost-prefix also serves
-    // bank_id alone and bank_id + card_type.
-    index('cards_bank_type_network_idx').on(
-      table.bankId,
-      table.cardType,
-      table.network,
-    ),
-    // Discovery filters on this before anything else.
+    index('cards_product_idx').on(table.productId),
+    index('cards_network_idx').on(table.network),
     index('cards_discoverability_idx').on(table.discoverability),
-    // BIN prefix search within a bank. text_pattern_ops makes
-    // `bin LIKE '5401%'` index-usable regardless of database collation.
-    index('cards_bank_bin_idx').on(
-      table.bankId,
-      sql`${table.bin} text_pattern_ops`,
-    ),
+    index('cards_bin_idx').on(sql`${table.bin} text_pattern_ops`),
     check('cards_bin_digits', sql`${table.bin} ~ '^[0-9]{6}$'`),
-    check('cards_last4_digits', sql`${table.last4} ~ '^[0-9]{4}$'`),
-  ],
-)
-
-export const cardSharingSettings = pgTable(
-  'card_sharing_settings',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    cardId: uuid('card_id')
-      .notNull()
-      .references(() => cards.id, { onDelete: 'cascade' }),
-    fieldName: cardFieldEnum('field_name').notNull(),
-    visibility: visibilityEnum('visibility').notNull().default('nobody'),
-    ...timestamps,
-  },
-  (table) => [
-    uniqueIndex('card_sharing_card_field_unique').on(
-      table.cardId,
-      table.fieldName,
-    ),
   ],
 )
 
@@ -465,10 +503,10 @@ export const auditLogs = pgTable(
 /** Login attempt counters live in rate_limits; see src/server/common/rate-limit.ts. */
 export const schema = {
   users,
+  cardProducts,
   recoveryCodes,
   banks,
   cards,
-  cardSharingSettings,
   friendships,
   blocks,
   reports,
@@ -480,15 +518,15 @@ export const schema = {
 export type UserRow = typeof users.$inferSelect
 export type BankRow = typeof banks.$inferSelect
 export type CardRow = typeof cards.$inferSelect
-export type CardSharingRow = typeof cardSharingSettings.$inferSelect
+export type CardProductRow = typeof cardProducts.$inferSelect
 export type FriendshipRow = typeof friendships.$inferSelect
 export type SessionRow = typeof sessions.$inferSelect
 export type RecoveryCodeRow = typeof recoveryCodes.$inferSelect
 
 export type CardType = (typeof cardTypeEnum.enumValues)[number]
 export type CardNetwork = (typeof cardNetworkEnum.enumValues)[number]
-export type CardField = (typeof cardFieldEnum.enumValues)[number]
 export type Visibility = (typeof visibilityEnum.enumValues)[number]
+export type FieldVisibility = (typeof fieldVisibilityEnum.enumValues)[number]
 export type FriendshipStatus = (typeof friendshipStatusEnum.enumValues)[number]
 export type Discoverability = (typeof discoverabilityEnum.enumValues)[number]
 export type AuditAction = (typeof auditActionEnum.enumValues)[number]

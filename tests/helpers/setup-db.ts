@@ -14,7 +14,7 @@ import { db, sqlClient } from '@/db'
 beforeEach(async () => {
   await db.execute(
     sql`TRUNCATE TABLE audit_logs, reports, blocks, friendships,
-        card_sharing_settings, cards, sessions, users, banks, rate_limits
+        cards, card_products, sessions, users, banks, rate_limits
         RESTART IDENTITY CASCADE`,
   )
 })

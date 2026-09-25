@@ -1,7 +1,7 @@
 import { asc, eq } from 'drizzle-orm'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { AddCardForm } from '@/components/AddCardForm'
+import { CardForm } from '@/components/CardForm'
 import { db } from '@/db'
 import { banks } from '@/db/schema'
 
@@ -24,10 +24,10 @@ export default async function AddCardPage() {
         >
           ← My Cards
         </Link>
-        <h1 className="mt-2 text-xl font-semibold text-ink">Add a card</h1>
+        <h1 className="mt-2 text-2xl font-semibold text-ink">Add a card</h1>
       </div>
 
-      <AddCardForm banks={bankRows} />
+      <CardForm banks={bankRows} />
     </div>
   )
 }

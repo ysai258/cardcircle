@@ -18,7 +18,7 @@ export async function GET(
       {
         cardId: card.id,
         discoverability: card.discoverability,
-        sharing: card.sharing,
+        binVisibility: card.binVisibility,
       },
       { requestId },
     )

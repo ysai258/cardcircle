@@ -40,14 +40,16 @@ Sign in as **Alice** (`9000000001`), then:
 
 1. **Home → HDFC Bank → Credit → Visa.** Two cards: Rahul's Millennia and
    Arjun's Regalia. The filtering happens in SQL, not in the browser.
-2. **Open Rahul's card.** Alice and Rahul are friends and he shares his expiry
-   and phone number, so she sees `08/29` and a **Call Rahul** button.
-3. **Open Arjun's card.** Alice is *not* Arjun's friend. She sees the safe
-   subset and a **Send friend request** button.
+2. **Open Rahul's card.** Alice and Rahul are friends and he shares his BIN
+   with friends and his phone number, so she sees `540123` and a **Call
+   Rahul** button.
+3. **Open Arjun's card.** Alice is *not* Arjun's friend, and Arjun masks his
+   BIN completely. She sees that he holds an HDFC Regalia — enough to answer
+   the offer question — with no digits at all.
 
-Arjun has an expiry date recorded, and he shares it with *his* friends. Alice
-is not one, so the server never puts it in the response — open devtools and
-look: `"shared": {}`. It is absent, not hidden.
+Arjun's BIN is not blanked client-side; the server never puts it in the
+response. Open devtools and look: there is no `bin` key. Searching his exact
+BIN finds nothing either, or the search box would reveal what the mask hides.
 
 ---
 
@@ -122,8 +124,19 @@ Full detail is in [`docs/security.md`](docs/security.md). The short version:
 
 **Nothing sensitive is stored.** There is no column for a card number, CVV,
 PIN, OTP or net-banking credential, and a test fails the build if one is ever
-added. The only reversible secrets are phone numbers and card expiry dates,
-both AES-256-GCM encrypted.
+added. Card expiry dates and last-4 digits were removed outright: nothing in
+this product needs them. The only reversible secret left is the phone
+number, AES-256-GCM encrypted.
+
+**Cards name a product, not a nickname.** An offer says "10% on Airtel Axis",
+so a card references a catalogue row rather than free text — otherwise the
+question could never be answered reliably. Users extend the catalogue through
+an "Other" option; those entries are marked unverified and attributed.
+
+**The BIN is maskable.** Each card chooses who may see its first six digits:
+everyone, friends, or nobody. Masked means absent from the response, and
+also unsearchable — a card whose BIN is hidden from you cannot be found BY
+that BIN, or search would leak exactly what the mask hides.
 
 **One function decides who sees what.**
 [`buildCardView`](src/server/modules/cards/authorization.ts) is a pure

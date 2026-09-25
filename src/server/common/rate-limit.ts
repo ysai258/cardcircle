@@ -39,6 +39,9 @@ export const RATE_LIMITS = {
   friendRequest: { limit: 20, windowSeconds: 24 * 60 * 60 },
   cardDetail: { limit: 240, windowSeconds: 60 * 60 },
   cardWrite: { limit: 60, windowSeconds: 60 * 60 },
+  // Adding a product publishes a row every other user sees in their picker,
+  // so it is the tightest write limit in the app.
+  productCreate: { limit: 10, windowSeconds: 24 * 60 * 60 },
 } as const satisfies Record<string, RateLimitRule>
 
 export type RateLimitName = keyof typeof RATE_LIMITS
