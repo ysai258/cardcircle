@@ -50,6 +50,13 @@
       "when": 1790364986509,
       "tag": "0006_catalogue_corrections",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790365344599,
+      "tag": "0007_merge_user_products",
+      "breakpoints": true
     }
   ]
 }
