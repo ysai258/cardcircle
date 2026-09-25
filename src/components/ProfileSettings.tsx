@@ -10,6 +10,7 @@ import { TextField } from '@/components/ui/Field'
 import { validateMobile } from '@/lib/form-validation'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch, ApiError, fieldError } from '@/lib/api'
+import { formatLongDate } from '@/lib/format'
 import type { MeDTO } from '@/server/modules/users/service'
 
 /**
@@ -117,11 +118,7 @@ export function ProfileSettings({ me }: { me: MeDTO }) {
           <div className="flex justify-between gap-4">
             <dt className="text-ink-muted">Member since</dt>
             <dd className="text-ink">
-              {new Date(me.createdAt).toLocaleDateString(undefined, {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
+{formatLongDate(me.createdAt)}
             </dd>
           </div>
         </dl>

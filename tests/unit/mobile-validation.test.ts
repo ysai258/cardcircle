@@ -98,3 +98,23 @@ describe('Password minimum is 8', () => {
     expect(passwordStrength('a-much-longer-passphrase-here').score).toBe(3)
   })
 })
+
+describe('Dates format identically on server and client', () => {
+  it('pins locale and time zone, so hydration cannot mismatch', async () => {
+    const { formatShortDate, formatLongDate } = await import('@/lib/format')
+
+    // A timestamp late in a UTC day is the NEXT day in IST. With the runtime
+    // default this rendered differently on the server (UTC) and in the
+    // browser (IST), which is what threw React error #418 in production.
+    const lateUtc = '2026-09-19T20:30:00.000Z'
+
+    expect(formatShortDate(lateUtc)).toBe('20 Sept')
+    expect(formatLongDate(lateUtc)).toBe('20 September 2026')
+
+    // Deterministic regardless of the process time zone.
+    const original = process.env.TZ
+    process.env.TZ = 'America/New_York'
+    expect(formatShortDate(lateUtc)).toBe('20 Sept')
+    process.env.TZ = original
+  })
+})

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch, ApiError } from '@/lib/api'
+import { formatShortDate } from '@/lib/format'
 
 type RequestSummary = {
   requestId: string
@@ -78,7 +79,7 @@ export function RequestsPanel({
                     {request.user.name}
                   </p>
                   <p className="text-xs text-ink-muted">
-                    Sent {formatDate(request.createdAt)}
+                    Sent {formatShortDate(request.createdAt)}
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -121,7 +122,7 @@ export function RequestsPanel({
               >
                 <span className="text-sm text-ink">{request.user.name}</span>
                 <span className="text-xs text-ink-muted">
-                  Waiting since {formatDate(request.createdAt)}
+                  Waiting since {formatShortDate(request.createdAt)}
                 </span>
               </li>
             ))}
@@ -130,11 +131,4 @@ export function RequestsPanel({
       </section>
     </div>
   )
-}
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, {
-    day: 'numeric',
-    month: 'short',
-  })
 }
