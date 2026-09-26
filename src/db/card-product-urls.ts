@@ -12,14 +12,18 @@
  *
  * Every URL below came from the issuer itself — its sitemap.xml, or its own
  * card-listing page — never from a guessed path or a search result. It was
- * then fetched: 143 of 149 returned 200.
+ * then fetched: 170 of 176 returned 200.
  *
  * The 6 that did not are all on bobcard.co.in, which Bank of Baroda's
  * own credit-card page links to and whose DNS resolves, but which refuses
  * connections from this network. Its pages are reachable from a browser; the
  * link is BoB's, not ours.
  *
- * WHY 132 CARDS HAVE NO ENTRY
+ * Canara's 31 are the whole of its published range, each one opened and its
+ * <h1> read back. That is what it takes to get a bank to full coverage, and
+ * it is why the others are not there yet.
+ *
+ * WHY 130 CARDS HAVE NO ENTRY
  *
  * Matching is deliberately strict: the last segment of the URL has to name
  * the card and nothing else. "BOB Classic Debit" is three real cards on
@@ -190,11 +194,38 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['BOB', 'credit', 'IRCTC BOB', 'https://www.bobcard.co.in/credit-card-types/irctc-credit-card'],
   ['BOB', 'debit', 'BOB RuPay Select Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/rupay-select-debit-card'],
   ['PNB', 'debit', 'PNB Platinum Debit', 'https://pnb.bank.in/Platinum-Debit-Card.html'],
-  ['CANARA', 'credit', 'Canara Mastercard Platinum', 'https://www.canarabank.bank.in/mastercard-platinum-credit-card'],
-  ['CANARA', 'credit', 'Canara RuPay Platinum', 'https://www.canarabank.bank.in/rupay-platinum-credit-card'],
-  ['CANARA', 'credit', 'Canara RuPay Select', 'https://canarabank.bank.in/pages/Rupay-Select-Credit-Card'],
-  ['CANARA', 'credit', 'Canara Visa Platinum', 'https://www.canarabank.bank.in/visa-platinum-credit-card'],
   ['UNION', 'credit', 'Union Bank RuPay Select', 'https://www.unionbankofindia.bank.in/en/details/rupay-select-credit-card'],
+  ['CANARA', 'credit', 'Canara Mastercard Gold', 'https://www.canarabank.bank.in/mastercard-gold-credit-card'],
+  ['CANARA', 'credit', 'Canara Mastercard Gold Secured', 'https://www.canarabank.bank.in/mastercard-gold-secured-credit-card'],
+  ['CANARA', 'credit', 'Canara Mastercard Platinum', 'https://www.canarabank.bank.in/mastercard-platinum-credit-card'],
+  ['CANARA', 'credit', 'Canara Mastercard Standard', 'https://www.canarabank.bank.in/mastercard-standard-credit-card'],
+  ['CANARA', 'credit', 'Canara Mastercard World', 'https://www.canarabank.bank.in/mastercard-world-credit-card'],
+  ['CANARA', 'credit', 'Canara RuPay Classic', 'https://www.canarabank.bank.in/rupay-classic-credit-card'],
+  ['CANARA', 'credit', 'Canara RuPay Platinum', 'https://www.canarabank.bank.in/rupay-platinum-credit-card'],
+  ['CANARA', 'credit', 'Canara RuPay Platinum Secured', 'https://www.canarabank.bank.in/rupay-platinum-secured-credit-card'],
+  ['CANARA', 'credit', 'Canara RuPay Select', 'https://www.canarabank.bank.in/rupay-select-credit-card'],
+  ['CANARA', 'credit', 'Canara RuPay Select Secured', 'https://www.canarabank.bank.in/rupay-select-secured-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Classic', 'https://www.canarabank.bank.in/visa-classic-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Corporate', 'https://www.canarabank.bank.in/visa-corporate-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Gold', 'https://www.canarabank.bank.in/visa-gold-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Gold Secured', 'https://www.canarabank.bank.in/visa-gold-secured-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Platinum', 'https://www.canarabank.bank.in/visa-platinum-credit-card'],
+  ['CANARA', 'credit', 'Canara Visa Signature', 'https://www.canarabank.bank.in/visa-signature-credit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard Business Debit', 'https://www.canarabank.bank.in/mastercard-business-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard Platinum Debit', 'https://www.canarabank.bank.in/mastercard-platinum-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard Platinum Millennial Debit', 'https://www.canarabank.bank.in/mastercard-platinum-millennial-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard Platinum Women Debit', 'https://www.canarabank.bank.in/mastercard-platinum-women-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard Standard Debit', 'https://www.canarabank.bank.in/mastercard-standard-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard World Debit', 'https://www.canarabank.bank.in/mastercard-world-debit-card'],
+  ['CANARA', 'debit', 'Canara Mastercard World NRI Platina Debit', 'https://www.canarabank.bank.in/mastercard-world-nri-platina-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Classic Debit', 'https://www.canarabank.bank.in/rupay-classic-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Millennial Debit', 'https://www.canarabank.bank.in/rupay-millennial-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Platinum Domestic Debit', 'https://www.canarabank.bank.in/rupay-platinum-domestic-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Platinum International Debit', 'https://www.canarabank.bank.in/rupay-platinum-international-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Select Debit', 'https://www.canarabank.bank.in/rupay-select-debit-card'],
+  ['CANARA', 'debit', 'Canara RuPay Women Platinum Debit', 'https://www.canarabank.bank.in/rupay-women-platinum-debit-card'],
+  ['CANARA', 'debit', 'Canara Visa Classic Debit', 'https://www.canarabank.bank.in/visa-classic-debit-card'],
+  ['CANARA', 'debit', 'Canara Visa Platinum Debit', 'https://www.canarabank.bank.in/visa-platinum-debit-card'],
   ['FEDERAL', 'credit', 'Federal Bank Celesta', 'https://www.federal.bank.in/celesta-credit-card'],
   ['FEDERAL', 'credit', 'Federal Bank Imperio', 'https://www.federal.bank.in/imperio-credit-card'],
   ['FEDERAL', 'credit', 'Federal Bank RuPay Signet', 'https://www.federal.bank.in/rupay-signet-credit-card'],

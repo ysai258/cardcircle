@@ -139,6 +139,27 @@ describe('the shipped product URLs', () => {
     }
   })
 
+  /**
+   * Canara's entries were taken wholesale from canarabank.bank.in rather
+   * than recalled, so every one of them should carry a link. The single
+   * exception is the vague legacy name kept alive because a member's card
+   * points at it; it goes when they re-pick, and this test goes with it.
+   */
+  it('cover every Canara product but the one legacy name', () => {
+    const linked = new Set(
+      CARD_PRODUCT_URLS.filter(([bank]) => bank === 'CANARA').map(
+        ([, cardType, name]) => `${cardType}:${name}`,
+      ),
+    )
+    const canara = CARD_PRODUCTS.find((seed) => seed.bank === 'CANARA')
+    const missing = [
+      ...canara!.credit.map((name) => `credit:${name}`),
+      ...canara!.debit.map((name) => `debit:${name}`),
+    ].filter((key) => !linked.has(key))
+
+    expect(missing).toEqual(['debit:Canara RuPay Debit'])
+  })
+
   it('give each product at most one URL', () => {
     const seen = new Set<string>()
     for (const [bank, cardType, name] of CARD_PRODUCT_URLS) {

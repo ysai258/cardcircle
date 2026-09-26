@@ -71,6 +71,13 @@
       "when": 1790369470749,
       "tag": "0009_product_urls",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790373070749,
+      "tag": "0010_canara_catalogue",
+      "breakpoints": true
     }
   ]
 }

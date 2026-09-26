@@ -26,6 +26,20 @@
  * that were missing and two CSB entries that never existed. If you add to
  * it, check the issuer's own page first — this file has been wrong before.
  *
+ * CANARA is the one bank here taken WHOLESALE from the issuer, rather than
+ * recalled: all 16 credit and 15 debit cards come from canarabank.bank.in's
+ * own card lists, and every page was opened and its <h1> read back. The
+ * difference shows. What this file used to call "Canara Platinum Debit" is
+ * five separate real cards (Visa Platinum, Mastercard Platinum, Mastercard
+ * Platinum Women, RuPay Platinum Domestic, RuPay Platinum International), so
+ * the vague name could never answer "who has THIS card" and could never be
+ * linked to a page either.
+ *
+ * "Canara RuPay Debit" survives at the end of the debit list for one reason:
+ * a real member's card points at it. Deleting it would break their card, and
+ * nobody but its owner can say which of the five RuPay variants they hold.
+ * It goes when they re-pick.
+ *
  * Amex issues no debit cards in India, hence the empty list.
  */
 
@@ -299,15 +313,40 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
   {
     "bank": "CANARA",
     "credit": [
-      "Canara RuPay Select",
-      "Canara Visa Platinum",
-      "Canara Mastercard Platinum",
-      "Canara RuPay Platinum"
+        "Canara RuPay Select",
+        "Canara Visa Platinum",
+        "Canara Mastercard Platinum",
+        "Canara RuPay Platinum",
+        "Canara Visa Signature",
+        "Canara Mastercard World",
+        "Canara RuPay Select Secured",
+        "Canara Visa Corporate",
+        "Canara Mastercard Gold",
+        "Canara Visa Gold",
+        "Canara RuPay Platinum Secured",
+        "Canara Mastercard Gold Secured",
+        "Canara Visa Gold Secured",
+        "Canara RuPay Classic",
+        "Canara Mastercard Standard",
+        "Canara Visa Classic"
     ],
     "debit": [
-      "Canara Classic Debit",
-      "Canara Platinum Debit",
-      "Canara RuPay Debit"
+        "Canara RuPay Select Debit",
+        "Canara Mastercard World Debit",
+        "Canara Visa Platinum Debit",
+        "Canara RuPay Platinum International Debit",
+        "Canara Mastercard World NRI Platina Debit",
+        "Canara Visa Classic Debit",
+        "Canara RuPay Platinum Domestic Debit",
+        "Canara Mastercard Platinum Women Debit",
+        "Canara Mastercard Platinum Millennial Debit",
+        "Canara RuPay Classic Debit",
+        "Canara Mastercard Platinum Debit",
+        "Canara Mastercard Business Debit",
+        "Canara Mastercard Standard Debit",
+        "Canara RuPay Millennial Debit",
+        "Canara RuPay Women Platinum Debit",
+        "Canara RuPay Debit"
     ]
   },
   {

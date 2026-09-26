@@ -20,6 +20,7 @@
     "pretest": "npm run test:setup",
     "db:logos": "NODE_OPTIONS=--conditions=react-server tsx scripts/set-bank-logos.ts",
     "db:gen-product-urls": "tsx scripts/gen-product-url-migration.ts",
+    "db:gen-catalogue": "tsx scripts/gen-catalogue-migration.ts",
     "db:check-product-urls": "NODE_OPTIONS=--conditions=react-server tsx scripts/check-product-urls.ts"
   },
   "dependencies": {
