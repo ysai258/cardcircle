@@ -1,5 +1,5 @@
 import 'server-only'
-import { and, asc, count, eq, sql } from 'drizzle-orm'
+import { and, asc, count, eq, isNull, sql } from 'drizzle-orm'
 import { db } from '@/db'
 import {
   banks,
@@ -10,6 +10,7 @@ import {
   type FieldVisibility,
   users,
 } from '@/db/schema'
+import { isAllowedCardUrl } from '@/lib/bank-links'
 import { notFound, validationFailed } from '@/server/common/errors'
 import { enforceRateLimit } from '@/server/common/rate-limit'
 import { decryptPhone, maskPhone } from '@/server/crypto/phone'
@@ -41,8 +42,14 @@ function toProductDTO(row: {
   id: string
   name: string
   isVerified: boolean
+  productUrl: string | null
 }): ProductDTO {
-  return { id: row.id, name: row.name, isVerified: row.isVerified }
+  return {
+    id: row.id,
+    name: row.name,
+    isVerified: row.isVerified,
+    url: row.productUrl,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -61,6 +68,7 @@ export async function listProducts(
       id: cardProducts.id,
       name: cardProducts.name,
       isVerified: cardProducts.isVerified,
+      productUrl: cardProducts.productUrl,
       cardType: cardProducts.cardType,
     })
     .from(cardProducts)
@@ -71,7 +79,7 @@ export async function listProducts(
     // should not outrank the real catalogue in the list.
     .orderBy(sql`${cardProducts.isVerified} DESC`, asc(cardProducts.name))
 
-  return rows
+  return rows.map((row) => ({ ...toProductDTO(row), cardType: row.cardType }))
 }
 
 /**
@@ -93,6 +101,8 @@ export async function findOrCreateProduct(input: {
   bankId: string
   cardType: CardType
   name: string
+  /** The issuer's page for it, already checked against the bank's hosts. */
+  url?: string | null
   userId: string
 }): Promise<ProductDTO> {
   const name = normalizeProductName(input.name)
@@ -109,6 +119,7 @@ export async function findOrCreateProduct(input: {
       id: cardProducts.id,
       name: cardProducts.name,
       isVerified: cardProducts.isVerified,
+      productUrl: cardProducts.productUrl,
     })
     .from(cardProducts)
     .where(
@@ -120,7 +131,22 @@ export async function findOrCreateProduct(input: {
     )
     .limit(1)
 
-  if (existing) return toProductDTO(existing)
+  if (existing) {
+    // A link may be ADDED to a product that has none, but never changed.
+    // Filling a gap is a contribution; overwriting is a way to repoint a
+    // link every other member already sees, and the first is worth having
+    // without the second.
+    if (input.url && existing.productUrl === null) {
+      await db
+        .update(cardProducts)
+        .set({ productUrl: input.url, updatedAt: new Date() })
+        .where(and(eq(cardProducts.id, existing.id), isNull(cardProducts.productUrl)))
+
+      return toProductDTO({ ...existing, productUrl: input.url })
+    }
+
+    return toProductDTO(existing)
+  }
 
   await enforceRateLimit('productCreate', input.userId)
 
@@ -131,6 +157,7 @@ export async function findOrCreateProduct(input: {
       cardType: input.cardType,
       name,
       slug,
+      productUrl: input.url ?? null,
       isVerified: false,
       createdBy: input.userId,
     })
@@ -141,6 +168,7 @@ export async function findOrCreateProduct(input: {
       id: cardProducts.id,
       name: cardProducts.name,
       isVerified: cardProducts.isVerified,
+      productUrl: cardProducts.productUrl,
     })
 
   if (created) {
@@ -160,6 +188,7 @@ export async function findOrCreateProduct(input: {
       id: cardProducts.id,
       name: cardProducts.name,
       isVerified: cardProducts.isVerified,
+      productUrl: cardProducts.productUrl,
     })
     .from(cardProducts)
     .where(
@@ -194,9 +223,43 @@ async function loadOwnerInput(userId: string) {
   }
 }
 
+/**
+ * Checks a member-supplied card link against the bank that issued the card.
+ *
+ * The bank's code is read from the database rather than taken from the
+ * request, so the caller cannot nominate which bank's hosts to be measured
+ * against by sending a different bankId than the card actually uses.
+ */
+async function checkProductUrl(bankId: string, url: string): Promise<string> {
+  const [bank] = await db
+    .select({ code: banks.code })
+    .from(banks)
+    .where(eq(banks.id, bankId))
+    .limit(1)
+
+  if (!bank || !isAllowedCardUrl(bank.code, url)) {
+    throw validationFailed('That link is not on the bank’s own website', [
+      {
+        field: 'otherProductUrl',
+        messages: [
+          'Use a link from the bank’s own website, so your friends can trust where it goes.',
+        ],
+      },
+    ])
+  }
+
+  return url
+}
+
 /** Resolves the product a create/update refers to, honouring "Other". */
 async function resolveProduct(
-  input: { bankId: string; cardType: CardType; productId?: string; otherProductName?: string | null },
+  input: {
+    bankId: string
+    cardType: CardType
+    productId?: string
+    otherProductName?: string | null
+    otherProductUrl?: string | null
+  },
   userId: string,
 ): Promise<{ id: string; cardType: CardType }> {
   if (input.otherProductName) {
@@ -204,6 +267,9 @@ async function resolveProduct(
       bankId: input.bankId,
       cardType: input.cardType,
       name: input.otherProductName,
+      url: input.otherProductUrl
+        ? await checkProductUrl(input.bankId, input.otherProductUrl)
+        : null,
       userId,
     })
     return { id: product.id, cardType: input.cardType }
@@ -368,6 +434,7 @@ export async function updateCard(
         cardType,
         productId: input.productId,
         otherProductName: input.otherProductName,
+        otherProductUrl: input.otherProductUrl,
       },
       ownerId,
     )

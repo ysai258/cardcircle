@@ -104,6 +104,7 @@ function buildSummary(
       id: product.id,
       name: product.name,
       isVerified: product.isVerified,
+      url: product.url,
     },
     cardType,
     network: card.network,

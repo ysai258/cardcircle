@@ -64,6 +64,13 @@
       "when": 1790365870749,
       "tag": "0008_merge_confirmed_products",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790369470749,
+      "tag": "0009_product_urls",
+      "breakpoints": true
     }
   ]
 }

@@ -56,6 +56,36 @@ export const expirySchema = z
   .trim()
   .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, 'Expiry must be in MM/YY format')
 
+/**
+ * An https URL, as typed by a person.
+ *
+ * Only the shape is checked here. WHOSE site it may point at depends on the
+ * bank the card belongs to, so that check lives beside the bank row — see
+ * isAllowedCardUrl. Both have to pass.
+ *
+ * An empty string becomes undefined rather than a validation error: the field
+ * is optional, and a browser submits "" for a text input nobody filled in.
+ */
+export function httpsUrl(max: number) {
+  return z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    z
+      .string()
+      .trim()
+      .max(max)
+      .refine((value) => {
+        let parsed: URL
+        try {
+          parsed = new URL(value)
+        } catch {
+          return false
+        }
+        return parsed.protocol === 'https:'
+      }, 'Enter a full link starting with https://')
+      .optional(),
+  )
+}
+
 export const visibilitySchema = z.enum(['nobody', 'friends'])
 export const discoverabilitySchema = z.enum(['nobody', 'friends', 'everyone'])
 

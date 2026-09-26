@@ -67,6 +67,8 @@ BIN finds nothing either, or the search box would reveal what the mask hides.
 | `npm run db:migrate` | Apply migrations |
 | `npm run db:generate` | Generate a migration from schema changes |
 | `npm run db:seed` | Reset and seed development data |
+| `npm run db:gen-product-urls` | Regenerate the product-link migration from `card-product-urls.ts` |
+| `npm run db:check-product-urls` | Report which product links actually landed (read-only, safe on production) |
 | `npm run infra:up` / `infra:down` | Local Postgres |
 
 Tests run against a **separate** `cardcircle_test` database. The security
@@ -220,6 +222,17 @@ help.
 protects against a database dump. It does not protect against someone who can
 read the environment. It is the honest ceiling of a zero-cost deployment; the
 key provider is swappable.
+
+**Only 149 of 281 catalogue cards link to their own page on the issuer's
+site.** Every one of those came from the bank's own sitemap or card-listing
+page and was then fetched, rather than guessed. The rest fall back to the
+bank's card list, which the UI labels as such. The gaps have two causes:
+issuers who describe one of our catalogue names with several real cards
+("BOB Classic Debit" is the Visa, RuPay and Mastercard Classic), where picking
+one would put a confident wrong link on someone's card; and four banks (Bank of
+India, AU, DBS, IDBI) whose sites refuse automated requests entirely, so
+nothing about them could be confirmed. Citi has none on purpose — its Indian
+card portfolio moved to Axis in 2023.
 
 **No admin area.** The schema supports it — `reports`, `audit_logs`, and
 `users.status` are all there, and disabling an account already removes its

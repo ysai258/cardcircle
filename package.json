@@ -18,7 +18,9 @@
     "infra:down": "docker compose down",
     "test:setup": "ENV_FILE=.env.local tsx scripts/setup-test-db.ts",
     "pretest": "npm run test:setup",
-    "db:logos": "NODE_OPTIONS=--conditions=react-server tsx scripts/set-bank-logos.ts"
+    "db:logos": "NODE_OPTIONS=--conditions=react-server tsx scripts/set-bank-logos.ts",
+    "db:gen-product-urls": "tsx scripts/gen-product-url-migration.ts",
+    "db:check-product-urls": "NODE_OPTIONS=--conditions=react-server tsx scripts/check-product-urls.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.1",

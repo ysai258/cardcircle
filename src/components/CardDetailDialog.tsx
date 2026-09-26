@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { CardPageLink } from '@/components/CardPageLink'
 import { cardTypeLabel, networkLabel } from '@/components/NetworkMark'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -158,10 +159,21 @@ export function CardDetailDialog({
             )}
           </dl>
 
+          {/* Where the offers actually are. CardCircle knows which card you
+              hold; only the issuer knows what it currently earns. */}
+          <CardPageLink
+            bankCode={card.bank.code}
+            bankName={card.bank.name}
+            cardType={card.cardType}
+            productUrl={card.product.url}
+          />
+
           {!card.product.isVerified && (
             <p className="rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
               This card name was added by a CardCircle user and has not been
               reviewed.
+              {card.product.url !== null &&
+                ' The link above was supplied by them too — it is on the bank’s own website, but nobody here has opened it.'}
             </p>
           )}
 

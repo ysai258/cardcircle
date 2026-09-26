@@ -237,6 +237,20 @@ export const cardProducts = pgTable(
      */
     slug: text('slug').notNull(),
 
+    /**
+     * The issuer's own page for this card.
+     *
+     * Presentation data in the strict sense — nobody's card depends on it —
+     * but it lives here rather than in code because members supply it for
+     * the products they add, so it is per-row data and not a lookup table.
+     *
+     * NULL is normal: most of the catalogue has no confirmed page, and those
+     * cards fall back to the bank's card list (src/lib/bank-links.ts). The
+     * host is checked against the bank's own domains before a value is
+     * written; see isAllowedCardUrl.
+     */
+    productUrl: text('product_url'),
+
     /** False for anything a user added via "Other", until reviewed. */
     isVerified: boolean('is_verified').notNull().default(false),
     createdBy: uuid('created_by').references(() => users.id, {
@@ -254,6 +268,12 @@ export const cardProducts = pgTable(
     index('card_products_bank_type_idx').on(table.bankId, table.cardType),
     // Cross-bank product search on the home page.
     index('card_products_slug_idx').on(sql`${table.slug} text_pattern_ops`),
+    // https only, in the database. The per-bank host allowlist needs the
+    // bank's code and so stays in the application; this is the floor.
+    check(
+      'card_products_url_https',
+      sql`${table.productUrl} IS NULL OR ${table.productUrl} LIKE 'https://%'`,
+    ),
   ],
 )
 

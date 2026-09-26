@@ -23,6 +23,7 @@ export const MILLENNIA: ProductDTO = {
   id: 'product-millennia',
   name: 'HDFC Millennia',
   isVerified: true,
+  url: 'https://www.hdfc.bank.in/credit-cards/millennia-credit-card',
 }
 
 /** Sentinel. If this string appears in a response it came from decryption. */

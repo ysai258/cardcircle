@@ -348,18 +348,64 @@ right-to-erasure request actually requires.
 
 ---
 
-## 10. What the tests cover
+## 10. Outbound links
 
-129 tests, all passing.
+A card's name links to the issuer's page for it, so the person asking "what
+does this card get me?" reaches the bank rather than a stale copy of its terms
+written here. One of those links is supplied **by another member**, when they
+add a card the catalogue does not list — which makes it the only content in
+this app that one user writes and others then click.
+
+Untreated, that is a way to deliver a phishing page with CardCircle's
+endorsement attached. So:
+
+- **The host is an allowlist, per bank.** A link on an HDFC card must be on one
+  of HDFC's own domains, or on one of four named fintech partners that market
+  bank-issued cards (Jupiter, OneCard, Fi, slice). Everything else is rejected.
+- **Matching is on a dot boundary**, so `hdfc.bank.in.example.com` fails. A
+  suffix check would pass it.
+- **The bank's code comes from the database**, not the request, so a crafted
+  POST cannot nominate which bank's hosts it is measured against.
+- **Rejected on the way in, at the API** — a bad URL is never stored, so no
+  later renderer has to remember to re-check it. It is checked again at render
+  time anyway, so a host removed from the allowlist stops being linked.
+- **`https:` is a CHECK constraint** in Postgres as well as a Zod rule: the
+  floor that holds if a future code path forgets. `javascript:` and `http:`
+  cannot be stored at all.
+- **A link may be added to a product that has none, never changed.** Filling a
+  gap is a contribution; overwriting is a way to repoint a link everyone else
+  already sees.
+- Every outbound link carries `rel="noopener noreferrer"` and shows its host,
+  so people can see where it goes before following it.
+
+The catalogue's own 149 URLs came from each issuer's sitemap or card-listing
+page and were then fetched; see `src/db/card-product-urls.ts` for what that
+does and does not guarantee. Cards without one link to the bank's card list
+instead, which the UI labels differently rather than implying it is the page
+for that exact card.
+
+---
+
+## 11. What the tests cover
+
+245 tests, all passing.
 
 | Suite | Count | Covers |
 | --- | --- | --- |
-| `tests/unit/card-authorization` | 38 | Every resolver branch, lazy decryption, relationship derivation |
+| `tests/unit/card-authorization` | 48 | Every resolver branch, lazy decryption, relationship derivation |
 | `tests/unit/crypto` | 28 | HKDF, AES-GCM tampering, HMAC, Argon2id, tokens |
-| `tests/security/card-access` | 18 | Friend vs non-friend fields, blocking, ownership, forbidden keys |
-| `tests/security/discovery` | 9 | List/count parity, filters, BIN prefix, pagination |
+| `tests/unit/mobile-validation` | 26 | Phone normalisation, rejection, masking |
+| `tests/unit/bank-links` | 17 | Host allowlist, look-alike hosts, link fallback, shipped URL data |
+| `tests/unit/connection-url` | 7 | Client-only libpq params stripped, `sslmode` kept |
+| `tests/unit/bank-theme` | 6 | Bank colours stay distinguishable |
+| `tests/schema/schema-safety` | 26 | Prohibited columns in schema and migrations |
 | `tests/security/friends-and-enumeration` | 20 | Request rules, block teardown, search, profiles, rate limits |
-| `tests/schema/schema-safety` | 16 | Prohibited columns in schema and migrations |
+| `tests/security/card-access` | 18 | Friend vs non-friend fields, blocking, ownership, forbidden keys |
+| `tests/security/recovery-and-deletion` | 14 | Recovery codes, password reset, erasure |
+| `tests/security/discovery` | 13 | List/count parity, filters, BIN prefix, pagination |
+| `tests/security/card-links` | 9 | Member-supplied URLs: allowlist, look-alikes, no overwrite, DB CHECK |
+| `tests/security/http-boundary` | 9 | Validation errors reach the client as usable 400s |
+| `tests/security/register-contract` | 4 | Registration response shape |
 
 Explicitly verified against a running server, not just in tests:
 
@@ -377,7 +423,7 @@ Explicitly verified against a running server, not just in tests:
 
 ---
 
-## 11. Threats not addressed
+## 12. Threats not addressed
 
 Named honestly rather than left implied.
 

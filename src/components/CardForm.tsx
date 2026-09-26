@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
+import { ExternalLinkIcon } from '@/components/CardPageLink'
 import { Button } from '@/components/ui/Button'
 import { Combobox } from '@/components/ui/Combobox'
 import { SelectField, TextField } from '@/components/ui/Field'
 import { useToast } from '@/components/ui/Toast'
 import { apiFetch, ApiError, fieldError } from '@/lib/api'
+import { bankCardsPage } from '@/lib/bank-links'
 import { bankGradient } from '@/lib/bank-theme'
 import type { OwnCardDTO } from '@/server/modules/cards/dto'
 
@@ -56,6 +58,7 @@ export function CardForm({
   )
   const [productId, setProductId] = useState(card?.product.id ?? '')
   const [otherName, setOtherName] = useState('')
+  const [otherUrl, setOtherUrl] = useState('')
 
   const [formIssue, setFormIssue] = useState<string | undefined>()
 
@@ -95,6 +98,11 @@ export function CardForm({
   const products = loaded?.key === productKey ? loaded.items : []
   const loadingProducts = productKey !== '' && loaded?.key !== productKey
 
+  const selectedBank = banks.find((bank) => bank.id === bankId)
+  const bankCardsPageUrl = selectedBank
+    ? bankCardsPage(selectedBank.code, cardType)
+    : null
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setFormIssue(undefined)
@@ -114,7 +122,10 @@ export function CardForm({
       bankId,
       cardType,
       ...(productId === OTHER
-        ? { otherProductName: otherName.trim() }
+        ? {
+            otherProductName: otherName.trim(),
+            otherProductUrl: otherUrl.trim(),
+          }
         : { productId }),
       network: String(form.get('network') ?? 'visa'),
       bin: String(form.get('bin') ?? ''),
@@ -232,16 +243,50 @@ export function CardForm({
         )}
 
         {productId === OTHER && (
-          <TextField
-            label="Name of your card"
-            name="otherProductName"
-            value={otherName}
-            onChange={(event) => setOtherName(event.target.value)}
-            maxLength={120}
-            placeholder="e.g. Axis Bank Horizon Credit Card"
-            hint="This is added to the shared list so other members can pick it too. Please use the card's real name."
-            error={fieldError(error, 'otherProductName')}
-          />
+          <>
+            <TextField
+              label="Name of your card"
+              name="otherProductName"
+              value={otherName}
+              onChange={(event) => setOtherName(event.target.value)}
+              maxLength={120}
+              placeholder="e.g. Axis Bank Horizon Credit Card"
+              hint="This is added to the shared list so other members can pick it too. Please use the card's real name."
+              error={fieldError(error, 'otherProductName')}
+            />
+
+            {/* Asked for, never required. A card that has no page on the
+                bank's site is a real case, and a required field would only
+                collect something made up. */}
+            <TextField
+              label="Link to this card on the bank's website (optional)"
+              name="otherProductUrl"
+              type="url"
+              inputMode="url"
+              value={otherUrl}
+              onChange={(event) => setOtherUrl(event.target.value)}
+              maxLength={400}
+              placeholder="https://…"
+              hint="Everyone who sees this card sees this link, so it has to be on the bank's own website. Leave it blank and the card links to the bank's card list instead."
+              error={fieldError(error, 'otherProductUrl')}
+            />
+
+            {bankCardsPageUrl && (
+              <p className="text-xs text-ink-muted">
+                Find it on{' '}
+                <a
+                  href={bankCardsPageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-accent hover:underline"
+                >
+                  the bank&apos;s {cardType} card list
+                  <ExternalLinkIcon className="size-3" />
+                </a>
+                , then copy the address of your card&apos;s page.
+              </p>
+            )}
+          </>
         )}
 
         <SelectField

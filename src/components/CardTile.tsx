@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/Badge'
 import { BankMark } from '@/components/BankMark'
+import { cardLinkLabel, ExternalLinkIcon } from '@/components/CardPageLink'
 import { cardTypeLabel, networkLabel } from '@/components/NetworkMark'
+import { cardLink, linkHost } from '@/lib/bank-links'
 import {
   bankGradientFor,
   bankTheme,
@@ -26,6 +28,14 @@ import type { CardSummaryDTO } from '@/server/modules/cards/dto'
  *
  * The background is the issuer's brand colour, never its logo unless a real
  * one is on file. A colour is decoration; a logo is a claim of affiliation.
+ *
+ * THE NAME IS A LINK, THE REST OF THE FACE IS A BUTTON
+ *
+ * Tapping the card opens its details; tapping the NAME goes to the issuer's
+ * page for it, which is where the offers actually are. Two destinations on
+ * one surface, so the button is an absolutely-positioned overlay rather than
+ * a wrapper: an `<a>` nested inside a `<button>` is invalid HTML, and
+ * browsers resolve it by ignoring one of them.
  */
 export function CardTile({
   card,
@@ -51,11 +61,23 @@ export function CardTile({
   const faceBackground = bankGradientFor(card.bank.code, seed)
   const pattern = cardPattern(seed)
 
+  const link = cardLink(card.bank.code, card.cardType, card.product.url)
+
   const face = (
     <div
       className="relative flex aspect-[1.6/1] w-full flex-col overflow-hidden rounded-2xl border-2 border-black/10 p-3.5 shadow-card transition-all duration-200 group-hover:-translate-y-1 group-hover:shadow-raised"
       style={{ background: faceBackground, color: theme.ink }}
     >
+      {/* Covers the whole face, under the name link. Rendered first so it
+          cannot swallow the link's clicks. */}
+      {onOpen && (
+        <button
+          type="button"
+          onClick={onOpen}
+          aria-label={`${card.product.name}, ${cardTypeLabel(card.cardType)} ${networkLabel(card.network)}, owned by ${card.owner.name}`}
+          className="absolute inset-0 z-10 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        />
+      )}
       {/* Texture. Colour alone left a bank's cards indistinguishable. */}
       {pattern && (
         <div
@@ -108,13 +130,39 @@ export function CardTile({
         </span>
       </div>
 
-      {/* Product — the thing people are actually looking for. */}
-      <p
-        className="relative mt-2 line-clamp-2 text-[15px] font-bold leading-tight"
-        style={{ color: theme.ink }}
-      >
-        {card.product.name}
-      </p>
+      {/* Product — the thing people are actually looking for, and the way
+          through to what it actually gets you. */}
+      {link ? (
+        <a
+          href={link.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={cardLinkLabel(
+            link.exact,
+            card.bank.name,
+            card.cardType,
+            linkHost(link.url),
+          )}
+          /* `py-2` instead of the `mt-2` the plain name had, which leaves
+             the text in exactly the same place while giving the link a
+             thumb-sized hit area: a one-line card name is 19px tall, well
+             under what anyone can reliably tap. It grows into the gap above
+             and the flexible gap below, overlapping no other control. */
+          className="relative z-20 inline-flex w-fit max-w-full items-start gap-1 py-2 text-left text-[15px] font-bold leading-tight underline decoration-transparent decoration-2 underline-offset-2 transition-colors hover:decoration-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          style={{ color: theme.ink }}
+        >
+          <span className="line-clamp-2">{card.product.name}</span>
+          {/* The name is the label; the arrow only says it leaves the app. */}
+          <ExternalLinkIcon className="mt-0.5 size-3 shrink-0 opacity-70" />
+        </a>
+      ) : (
+        <p
+          className="relative mt-2 line-clamp-2 text-[15px] font-bold leading-tight"
+          style={{ color: theme.ink }}
+        >
+          {card.product.name}
+        </p>
+      )}
 
       {/* Digits, or an explicit locked state. */}
       <div className="relative mt-auto">
@@ -181,18 +229,7 @@ export function CardTile({
     </div>
   )
 
-  if (!onOpen) return <div className="group">{face}</div>
-
-  return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group w-full rounded-2xl text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      aria-label={`${card.product.name}, ${cardTypeLabel(card.cardType)} ${networkLabel(card.network)}, owned by ${card.owner.name}`}
-    >
-      {face}
-    </button>
-  )
+  return <div className="group">{face}</div>
 }
 
 /** The visibility badge an owner sees on their own cards. */

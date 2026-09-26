@@ -26,6 +26,16 @@ export type ProductDTO = {
   name: string
   /** False for products a user added via "Other", pending review. */
   isVerified: boolean
+  /**
+   * The issuer's own page for this card, or null when none is on file.
+   *
+   * Not authorisation-gated, unlike `bin`: it is public catalogue data about
+   * a card model, and says nothing about the person holding it. So it is
+   * null rather than absent — absence in this codebase means "you were not
+   * allowed to see this", and overloading it here would blur a distinction
+   * worth keeping sharp.
+   */
+  url: string | null
 }
 
 /**

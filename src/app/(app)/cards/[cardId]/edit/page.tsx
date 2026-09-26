@@ -1,6 +1,7 @@
 import { asc, eq } from 'drizzle-orm'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { ProductNameLink } from '@/components/CardPageLink'
 import { CardForm } from '@/components/CardForm'
 import { db } from '@/db'
 import { banks } from '@/db/schema'
@@ -45,7 +46,15 @@ export default async function EditCardPage({
           ← My Cards
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-ink">Edit card</h1>
-        <p className="mt-1 text-sm text-ink-muted">{card.product.name}</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          <ProductNameLink
+            name={card.product.name}
+            bankCode={card.bank.code}
+            bankName={card.bank.name}
+            cardType={card.cardType}
+            productUrl={card.product.url}
+          />
+        </p>
       </div>
 
       <CardForm banks={bankRows} card={card} />

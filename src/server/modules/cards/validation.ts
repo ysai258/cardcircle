@@ -2,6 +2,7 @@ import { z } from 'zod'
 import {
   binSchema,
   discoverabilitySchema,
+  httpsUrl,
   safeText,
   uuidSchema,
 } from '@/server/common/validation'
@@ -29,6 +30,16 @@ const cardFields = {
   productId: uuidSchema.optional(),
   /** …or a new name, when the user picked "Other". */
   otherProductName: safeText(120).nullish(),
+  /**
+   * The issuer's page for that card, when the user knows it. Optional: not
+   * every card has a page, and a required field would just collect junk.
+   *
+   * The host is checked against the bank's own domains in the service, where
+   * the bank row is in hand. A link CardCircle shows to someone's friends
+   * has to point at the bank, or this app becomes a way to deliver a
+   * convincing phishing page.
+   */
+  otherProductUrl: httpsUrl(400),
   network: z.enum(['visa', 'mastercard', 'rupay', 'amex']),
   bin: binSchema,
   /** Who may see the first six digits. */
