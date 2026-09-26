@@ -235,6 +235,36 @@ describe('the shipped product URLs', () => {
     },
   )
 
+  /**
+   * Two names for one card split the answer to "who has this card".
+   *
+   * The pairs below are families an issuer documents on one page, confirmed
+   * by reading it: IDFC's Power page names Power+ too, and YES puts a card
+   * and its business variant on the same page. Anything else sharing a URL
+   * is two entries for the same product.
+   */
+  it('share a URL only where the issuer documents one page for both', () => {
+    const SHARED_ON_PURPOSE = new Set([
+      'IDFC|credit:IDFC FIRST Power|credit:IDFC FIRST Power+',
+      'YES|debit:YES Apex Debit|debit:YES Apex Metal Debit',
+      'YES|debit:YES Prosperity Sleek Business Debit|debit:YES Prosperity Sleek Debit',
+      'YES|debit:YES Venture Business Debit|debit:YES Venture Debit',
+    ])
+
+    const byUrl = new Map<string, string[]>()
+    for (const [bank, cardType, name, url] of CARD_PRODUCT_URLS) {
+      const key = `${bank}|${url}`
+      byUrl.set(key, [...(byUrl.get(key) ?? []), `${cardType}:${name}`])
+    }
+
+    const unexpected = [...byUrl]
+      .filter(([, names]) => names.length > 1)
+      .map(([key, names]) => `${key.split('|')[0]}|${[...names].sort().join('|')}`)
+      .filter((signature) => !SHARED_ON_PURPOSE.has(signature))
+
+    expect(unexpected).toEqual([])
+  })
+
   it('give each product at most one URL', () => {
     const seen = new Set<string>()
     for (const [bank, cardType, name] of CARD_PRODUCT_URLS) {

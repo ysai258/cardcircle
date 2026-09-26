@@ -159,8 +159,8 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "MakeMyTrip ICICI",
       "HPCL Super Saver ICICI",
       "Manchester United ICICI",
-      "ICICI Platinum Chip",
-      "ICICI Expressions"
+      "ICICI Expressions",
+      "ICICI Platinum Chip"
     ],
     "debit": [
       "ICICI Coral Debit",
@@ -295,7 +295,7 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "YES Prosperity Sleek Business Debit",
       "YES Prosperity Bold Business Debit",
       "YES Prosperity Prime Business Debit",
-      "YES Prosperity RuPay Platinum Debit",
+      "YES Prosperity Platinum Debit",
       "YES Premia Debit",
       "YES Grandeur Debit",
       "YES Grandeur Business Debit",
@@ -582,7 +582,6 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "AU Royale World Debit",
       "AU Royale Business Debit",
       "AU Gold Debit",
-      "AU Visa Platinum Debit",
       "AU Platinum Business Debit",
       "AU Visa Business Gold Debit",
       "AU RuPay Platinum Debit",

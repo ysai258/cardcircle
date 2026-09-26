@@ -378,7 +378,7 @@ endorsement attached. So:
 - Every outbound link carries `rel="noopener noreferrer"` and shows its host,
   so people can see where it goes before following it.
 
-The catalogue's own 365 URLs came from each issuer's sitemap or card-listing
+The catalogue's own 364 URLs came from each issuer's sitemap or card-listing
 page and were then fetched; see `src/db/card-product-urls.ts` for what that
 does and does not guarantee. Cards without one link to the bank's card list
 instead, which the UI labels differently rather than implying it is the page
@@ -388,14 +388,14 @@ for that exact card.
 
 ## 11. What the tests cover
 
-262 tests, all passing.
+264 tests, all passing.
 
 | Suite | Count | Covers |
 | --- | --- | --- |
 | `tests/unit/card-authorization` | 48 | Every resolver branch, lazy decryption, relationship derivation |
 | `tests/unit/crypto` | 28 | HKDF, AES-GCM tampering, HMAC, Argon2id, tokens |
 | `tests/unit/mobile-validation` | 26 | Phone normalisation, rejection, masking |
-| `tests/unit/bank-links` | 30 | Host allowlist, look-alike hosts, link fallback, per-bank link coverage |
+| `tests/unit/bank-links` | 31 | Host allowlist, look-alike hosts, link fallback, per-bank link coverage |
 | `tests/unit/connection-url` | 7 | Client-only libpq params stripped, `sslmode` kept |
 | `tests/unit/bank-theme` | 6 | Bank colours stay distinguishable |
 | `tests/schema/schema-safety` | 28 | Prohibited columns in schema and migrations |

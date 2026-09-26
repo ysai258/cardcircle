@@ -224,9 +224,11 @@ protects against a database dump. It does not protect against someone who can
 read the environment. It is the honest ceiling of a zero-cost deployment; the
 key provider is swappable.
 
-**365 of 455 catalogue cards link to their own page on the issuer's site.**
+**364 of 454 catalogue cards link to their own page on the issuer's site.**
 Every one came from the bank's own sitemap or card-listing page and was then
-fetched, rather than guessed. The rest fall back to the bank's card list,
+fetched, rather than guessed — and every one has since been loaded in a real
+browser and checked against the page's own heading, which is what caught a
+link pointing at the wrong card and a duplicate listed twice. The rest fall back to the bank's card list,
 which the UI labels as such.
 
 Twelve banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central,

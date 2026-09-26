@@ -31,10 +31,27 @@
  * either nothing or an empty JavaScript shell. Only Bank of India is
  * genuinely unreadable — its Cloudflare challenge does not resolve headless.
  *
- * One link here was wrong and is worth remembering: csb.bank.in's
- * /csb-bank-edge-credit-card renders <h1>Edge+ CSB Bank RuPay Credit
- * Card</h1>. It is the Edge PLUS page, and the plain Edge card pointed at it
- * for four migrations. Reading the page back is what caught it.
+ * WHAT READING THE PAGES BACK HAS CAUGHT
+ *
+ * Every link here has been loaded in a real browser and checked against the
+ * page's own heading and text. Nothing was dead. Three things were wrong,
+ * and none of them could have been caught any other way:
+ *
+ *   - csb.bank.in/csb-bank-edge-credit-card renders <h1>Edge+ CSB Bank
+ *     RuPay Credit Card</h1>. It is the Edge PLUS page, and the plain Edge
+ *     card pointed at it for four migrations.
+ *   - federal.bank.in/visa-imperio-credit-card, which Federal's own listing
+ *     links, renders the CELESTA heading. It is not used.
+ *   - "YES Prosperity RuPay Platinum Debit" is not a RuPay card; its page
+ *     is titled "YES Prosperity Platinum Debit card" and never says RuPay.
+ *
+ * And one duplicate: AU lists /visa-platinum-debit-card and
+ * /platinum-debit-card, which serve byte-identical pages. Two names for one
+ * card, now one.
+ *
+ * The audit is worth re-running after any batch. It needs a real Chrome and
+ * a generous wait -- a 1.6s wait reported four YES Bank pages as mismatches
+ * that a 9s wait showed were fine.
  *
  * WHY THE REST HAVE NO ENTRY
  *
@@ -369,7 +386,7 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['YES', 'debit', 'YES Prosperity Bold Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-bold-debit-card'],
   ['YES', 'debit', 'YES Prosperity Prime Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-prime-business-debit-card'],
   ['YES', 'debit', 'YES Prosperity Prime Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-prime-debit-card'],
-  ['YES', 'debit', 'YES Prosperity RuPay Platinum Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-platinum-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Platinum Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-platinum-debit-card'],
   ['YES', 'debit', 'YES Prosperity Sleek Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-sleek-debit-card'],
   ['YES', 'debit', 'YES Prosperity Sleek Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-sleek-debit-card'],
   ['YES', 'debit', 'YES Reflection Image Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/reflection-debit-card'],
@@ -412,7 +429,6 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['AUSFB', 'debit', 'AU RuPay Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/rupay-platinum-debit-card'],
   ['AUSFB', 'debit', 'AU swipe&save Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/au-swipe-and-save-debit-card'],
   ['AUSFB', 'debit', 'AU Visa Business Gold Debit', 'https://www.au.bank.in/personal-banking/debit-cards/visa-business-gold-debit-card'],
-  ['AUSFB', 'debit', 'AU Visa Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/visa-platinum-debit-card'],
   ['DBS', 'credit', 'DBS Bank Vantage', 'https://www.dbs.com/in/credit-cards/vantage.html'],
   ['DBS', 'credit', 'DBS Spark', 'https://www.dbs.com/in/credit-cards/spark.html'],
   ['DBS', 'credit', 'DBS SuperCard', 'https://www.dbs.com/in/credit-cards/supercard.html'],
