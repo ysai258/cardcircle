@@ -158,6 +158,26 @@ describe('the shipped product URLs', () => {
     // Same for PNB: its debit cards have no page of their own.
     PNB: ['debit:PNB Classic Debit', 'debit:PNB RuPay Debit'],
     BOB: [],
+    // Real cards whose tile on YES Bank's page leads to a generic
+    // application form rather than a page about that card. A link to an
+    // apply form is not a link to the card.
+    YES: [
+      // Stayed as "YES Marquee"; YES Bank prints "MARQUEE Credit Card" and
+      // the two are one card, matched on slug rather than name.
+      'credit:YES Marquee',
+      'credit:YES RESERV',
+      'credit:YES Elite+',
+      'credit:YES ACE',
+      'credit:YES Select',
+      'credit:YES RuPay',
+      'credit:YES Paisabazaar PaisaSave RuPay',
+      'credit:YES BYOC',
+      'credit:YES Wellness',
+      'credit:YES Wellness Plus',
+      'credit:YES EMI Card',
+      "credit:YES Essence Women's",
+      'debit:YES Private Debit',
+    ],
     // Central lists its debit cards as text on one page, with no page per
     // card, so the names are real and the links do not exist. Its credit
     // page has no card list at all — those three names are untouched.

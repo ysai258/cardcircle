@@ -85,6 +85,13 @@
       "when": 1790376670749,
       "tag": "0011_issuer_catalogues",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1790380270749,
+      "tag": "0012_yes_catalogue",
+      "breakpoints": true
     }
   ]
 }

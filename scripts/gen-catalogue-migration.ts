@@ -119,6 +119,43 @@ const BATCHES: Batch[] = [
       ['CENTRAL', 'debit', 'Central Bank RuPay Debit'],
     ],
   },
+  {
+    file: '0012_yes_catalogue',
+    header: `-- YES Bank, finally.
+--
+-- 0011 left YES Bank out because its site refuses automated requests: curl
+-- gets an empty JavaScript shell, and headless Chromium gets an outright
+-- ERR_HTTP2_PROTOCOL_ERROR. The block turned out to be on the TLS and HTTP/2
+-- fingerprint rather than on browsers as such -- driving the real Chrome
+-- binary instead of bundled Chromium renders both pages in full.
+--
+-- What it shows is a range nothing like the seeded one. YES Bank sells 22
+-- credit cards and 28 debit cards; this catalogue listed seven and three,
+-- and five of the credit names correspond to nothing it sells any more --
+-- "YES First Preferred" and "YES First Exclusive" predate a rebrand, and the
+-- credit card called "Premia" is now a debit card.
+--
+-- 47 products added, 36 of them linked. The 11 without a link are real cards
+-- named on the page whose tile leads to a generic application form rather
+-- than to a page about that card; a link to an apply form is not a link to
+-- the card, so they get none.
+--
+-- "YES Marquee" stays and is NOT re-added as "YES MARQUEE". Matching here is
+-- on the slug rather than the name, because those two differ only in case
+-- and are one card: comparing names would have split the answer to "who has
+-- a Marquee" across two products, and the unique index would have rejected
+-- the second row anyway.`,
+    addFromCatalogue: ['YES'],
+    drop: [
+      ['YES', 'credit', 'YES Prosperity Rewards Plus'],
+      ['YES', 'credit', 'YES Premia'],
+      ['YES', 'credit', 'YES First Preferred'],
+      ['YES', 'credit', 'YES First Exclusive'],
+      ['YES', 'credit', 'Paisabazaar PaisaSave YES'],
+      ['YES', 'debit', 'YES Prosperity Debit'],
+      ['YES', 'debit', 'YES Platinum Debit'],
+    ],
+  },
 ]
 
 const escape = (value: string): string => value.replace(/'/g, "''")

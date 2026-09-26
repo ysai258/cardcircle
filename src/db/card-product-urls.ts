@@ -19,11 +19,15 @@
  * this network. Its pages are reachable from a browser; the link is BoB's,
  * not ours.
  *
- * Seven banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda and
- * Central — were taken wholesale from their own card listings rather than
+ * Eight banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central
+ * and YES — were taken wholesale from their own card listings rather than
  * recalled, and each page was opened and its heading read back where the
  * page renders one. `tests/unit/bank-links` names every product of theirs
  * that is deliberately unlinked, so adding one without a link fails.
+ *
+ * YES Bank needed the real Chrome binary to read at all: it rejects bundled
+ * Chromium's TLS fingerprint outright, and serves curl an empty JavaScript
+ * shell.
  *
  * WHY THE REST HAVE NO ENTRY
  *
@@ -326,4 +330,41 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['PNB', 'credit', 'PNB RuPay Platinum', 'https://creditcard.pnb.bank.in/types5.html'],
   ['PNB', 'credit', 'PNB Patanjali RuPay Platinum', 'https://creditcard.pnb.bank.in/types12.html'],
   ['BOB', 'credit', 'BOB Varunah', 'https://www.bobcard.co.in/credit-card-types/indian-navy-varunah'],
+  ['YES', 'credit', 'YES ANQ Phi', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/anq-phi-credit-card'],
+  ['YES', 'credit', 'YES FinBooster', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/finbooster-card'],
+  ['YES', 'credit', 'YES Klick', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/klick-credit-card'],
+  ['YES', 'credit', 'YES novio', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/novio-credit-card'],
+  ['YES', 'credit', 'YES novio RuPay', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/novio-rupay-credit-card'],
+  ['YES', 'credit', 'YES Paisabazaar PaisaSave', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/paisabazaar-credit-card'],
+  ['YES', 'credit', 'YES POP-CLUB', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/pop-club-credit-card'],
+  ['YES', 'credit', 'YES UNI', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/uni-credit-card'],
+  ['YES', 'credit', 'YES UNI RuPay', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/uni-rupay-credit-card'],
+  ['YES', 'credit', 'YES Zagg', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/credit-cards/zagg-credit-card'],
+  ['YES', 'debit', 'YES Apex Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/apex-debit-card'],
+  ['YES', 'debit', 'YES Apex Metal Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/apex-debit-card'],
+  ['YES', 'debit', 'YES Aura Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/aura-debit-card'],
+  ['YES', 'debit', 'YES Elegance Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/elegance-debit-card'],
+  ['YES', 'debit', 'YES Element Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/element-debit-card'],
+  ['YES', 'debit', 'YES Emerge Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/emerge-debit-card'],
+  ['YES', 'debit', 'YES Engage Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/engage-debit-card'],
+  ['YES', 'debit', 'YES Explore Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/explore-debit-card'],
+  ['YES', 'debit', 'YES First Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-first-business-debit-card'],
+  ['YES', 'debit', 'YES First Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-first-debit-card'],
+  ['YES', 'debit', 'YES Grandeur Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/grandeur-business-debit-card'],
+  ['YES', 'debit', 'YES Grandeur Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-grandeur-debit-card'],
+  ['YES', 'debit', 'YES Healthfit Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/e-series-debit-card/healthfit-debit-card'],
+  ['YES', 'debit', 'YES PMJDY RuPay Chip Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-bank-pmjdy-rupay-chip-debit-card'],
+  ['YES', 'debit', 'YES Premia Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-premia-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Bold Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-bold-business-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Bold Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-bold-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Prime Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-prime-business-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Prime Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-prime-debit-card'],
+  ['YES', 'debit', 'YES Prosperity RuPay Platinum Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-platinum-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Sleek Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-sleek-debit-card'],
+  ['YES', 'debit', 'YES Prosperity Sleek Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-prosperity-sleek-debit-card'],
+  ['YES', 'debit', 'YES Reflection Image Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/reflection-debit-card'],
+  ['YES', 'debit', 'YES RuPay Kisan Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/yes-bank-rupay-kisan-debit-card'],
+  ['YES', 'debit', 'YES Spirit Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/spirit-debit-card'],
+  ['YES', 'debit', 'YES Venture Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/venture-debit-card'],
+  ['YES', 'debit', 'YES Venture Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/venture-debit-card'],
 ]
