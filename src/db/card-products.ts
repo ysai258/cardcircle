@@ -290,9 +290,23 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "BOB Varunah"
     ],
     "debit": [
-      "BOB Classic Debit",
-      "BOB Platinum Debit",
-      "BOB RuPay Select Debit"
+      "BOB RuPay Select Debit",
+      "BOB World Visa Opulence Debit",
+      "BOB World Visa Sapphire Debit",
+      "BOB Mastercard World Debit",
+      "BOB EaseMyTrip Debit",
+      "BOB inSIGHT Braille Debit",
+      "BOB Visa Platinum Debit",
+      "BOB Mastercard Platinum Debit",
+      "BOB RuPay Platinum Debit",
+      "BOB Visa Vyapaar Business Debit",
+      "BOB World Yoddha Debit",
+      "BOB World Agniveer Debit",
+      "BOB Visa Classic Debit",
+      "BOB Mastercard Classic Debit",
+      "BOB RuPay Classic Debit",
+      "BOB RuPay Qsparc NCMC Debit",
+      "BOB Virtual Debit"
     ]
   },
   {
@@ -300,9 +314,26 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
     "credit": [
       "PNB RuPay Select",
       "PNB RuPay Platinum",
-      "PNB Global Gold",
-      "PNB Global Classic",
-      "PNB Patanjali RuPay Platinum"
+      "PNB Patanjali RuPay Platinum",
+      "PNB Visa Gold",
+      "PNB Visa Classic",
+      "PNB Visa Platinum",
+      "PNB Wave & Pay",
+      "PNB Rakshak RuPay Platinum",
+      "PNB Rakshak RuPay Select",
+      "PNB Visa Signature",
+      "PNB RuPay Millennial",
+      "PNB Patanjali RuPay Select",
+      "PNB BLISS",
+      "PNB SALARY RuPay Platinum",
+      "PNB SALARY RuPay Select",
+      "PNB Metal LUXURA on RuPay",
+      "PNB Metal LUXURA on Visa",
+      "PNB KIWI Co-Branded",
+      "PNB Zaggle Co-Branded Twin",
+      "PNB Prakram",
+      "PNB Premium Metal LUXURA (Indian Army)",
+      "PNB RRB Co-Branded RuPay Select"
     ],
     "debit": [
       "PNB Platinum Debit",
@@ -313,54 +344,68 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
   {
     "bank": "CANARA",
     "credit": [
-        "Canara RuPay Select",
-        "Canara Visa Platinum",
-        "Canara Mastercard Platinum",
-        "Canara RuPay Platinum",
-        "Canara Visa Signature",
-        "Canara Mastercard World",
-        "Canara RuPay Select Secured",
-        "Canara Visa Corporate",
-        "Canara Mastercard Gold",
-        "Canara Visa Gold",
-        "Canara RuPay Platinum Secured",
-        "Canara Mastercard Gold Secured",
-        "Canara Visa Gold Secured",
-        "Canara RuPay Classic",
-        "Canara Mastercard Standard",
-        "Canara Visa Classic"
+      "Canara RuPay Select",
+      "Canara Visa Platinum",
+      "Canara Mastercard Platinum",
+      "Canara RuPay Platinum",
+      "Canara Visa Signature",
+      "Canara Mastercard World",
+      "Canara RuPay Select Secured",
+      "Canara Visa Corporate",
+      "Canara Mastercard Gold",
+      "Canara Visa Gold",
+      "Canara RuPay Platinum Secured",
+      "Canara Mastercard Gold Secured",
+      "Canara Visa Gold Secured",
+      "Canara RuPay Classic",
+      "Canara Mastercard Standard",
+      "Canara Visa Classic"
     ],
     "debit": [
-        "Canara RuPay Select Debit",
-        "Canara Mastercard World Debit",
-        "Canara Visa Platinum Debit",
-        "Canara RuPay Platinum International Debit",
-        "Canara Mastercard World NRI Platina Debit",
-        "Canara Visa Classic Debit",
-        "Canara RuPay Platinum Domestic Debit",
-        "Canara Mastercard Platinum Women Debit",
-        "Canara Mastercard Platinum Millennial Debit",
-        "Canara RuPay Classic Debit",
-        "Canara Mastercard Platinum Debit",
-        "Canara Mastercard Business Debit",
-        "Canara Mastercard Standard Debit",
-        "Canara RuPay Millennial Debit",
-        "Canara RuPay Women Platinum Debit",
-        "Canara RuPay Debit"
+      "Canara RuPay Select Debit",
+      "Canara Mastercard World Debit",
+      "Canara Visa Platinum Debit",
+      "Canara RuPay Platinum International Debit",
+      "Canara Mastercard World NRI Platina Debit",
+      "Canara Visa Classic Debit",
+      "Canara RuPay Platinum Domestic Debit",
+      "Canara Mastercard Platinum Women Debit",
+      "Canara Mastercard Platinum Millennial Debit",
+      "Canara RuPay Classic Debit",
+      "Canara Mastercard Platinum Debit",
+      "Canara Mastercard Business Debit",
+      "Canara Mastercard Standard Debit",
+      "Canara RuPay Millennial Debit",
+      "Canara RuPay Women Platinum Debit",
+      "Canara RuPay Debit"
     ]
   },
   {
     "bank": "UNION",
     "credit": [
       "Union Bank RuPay Select",
-      "Union Bank Platinum",
-      "Union Bank Classic",
-      "Union Bank Signature"
+      "Union Bank NEXTERIA",
+      "Union Bank Unicorn RuPay",
+      "Union Bank DIVAA ICON",
+      "Union Bank PM SVANidhi",
+      "Union Bank JCB Wellness",
+      "Union Bank JCB Health",
+      "Union Bank UNI-CARBON",
+      "Union Bank Sparsh",
+      "Union Bank RuPay Platinum",
+      "Union Bank Visa Signature",
+      "Union Bank Visa Platinum",
+      "Union Bank Visa Gold"
     ],
     "debit": [
-      "Union Bank Classic Debit",
-      "Union Bank Platinum Debit",
-      "Union Bank RuPay Debit"
+      "Union Bank HNI Emperio Metal Debit",
+      "Union Bank RuPay Empower Her Debit",
+      "Union Bank Qsparc RuPay Debit",
+      "Union Bank Business Platinum Debit",
+      "Union Bank Business Debit (Platinum)",
+      "Union Bank Classic Debit (RuPay / Visa)",
+      "Union Bank Platinum Debit (RuPay / Visa / Mastercard)",
+      "Union Bank RuPay Select Debit"
     ]
   },
   {
@@ -429,9 +474,11 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "Central Bank Classic"
     ],
     "debit": [
-      "Central Bank Classic Debit",
-      "Central Bank Platinum Debit",
-      "Central Bank RuPay Debit"
+      "Central Bank RuPay Select Wellness Debit",
+      "Central Bank RuPay Platinum Debit",
+      "Central Bank RuPay Classic Debit",
+      "Central Bank Business Debit",
+      "Central Bank Visa Platinum Debit"
     ]
   },
   {
@@ -456,15 +503,25 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
   {
     "bank": "BANDHAN",
     "credit": [
-      "Bandhan Bank Standard",
-      "Bandhan Bank Select",
-      "Bandhan Bank Premium",
-      "Bandhan Bank One"
+      "Bandhan Bank Lumina",
+      "Bandhan Bank Flare",
+      "Bandhan Bank Ignite",
+      "Bandhan Bank Sparks"
     ],
     "debit": [
-      "Bandhan Classic Debit",
-      "Bandhan Platinum Debit",
-      "Bandhan RuPay Debit"
+      "Bandhan Bank Legacy Debit",
+      "Bandhan Bank Elite Plus Debit",
+      "Bandhan Bank Elite Debit",
+      "Bandhan Bank Mastercard Platinum Debit",
+      "Bandhan Bank Mastercard Platinum Plus Debit",
+      "Bandhan Bank Mastercard Titanium Debit",
+      "Bandhan Bank Visa Platinum Debit",
+      "Bandhan Bank RuPay Platinum Debit",
+      "Bandhan Bank Visa Classic Debit",
+      "Bandhan Bank RuPay Classic Debit",
+      "Bandhan Bank Avni Debit",
+      "Bandhan Bank PMJDY Debit",
+      "Bandhan Bank Business Standard Debit"
     ]
   },
   {
@@ -486,11 +543,13 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
   {
     "bank": "HSBC",
     "credit": [
-      "HSBC Cashback",
-      "HSBC Platinum",
-      "HSBC Premier Mastercard",
       "HSBC TravelOne",
-      "HSBC Visa Platinum"
+      "HSBC Visa Platinum",
+      "HSBC Premier",
+      "HSBC Live+",
+      "HSBC Taj",
+      "HSBC RuPay Platinum",
+      "HSBC RuPay Cashback"
     ],
     "debit": [
       "HSBC Premier Debit",

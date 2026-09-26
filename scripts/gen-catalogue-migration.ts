@@ -58,6 +58,67 @@ const BATCHES: Batch[] = [
       ['CANARA', 'debit', 'Canara Platinum Debit'],
     ],
   },
+  {
+    file: '0011_issuer_catalogues',
+    header: `-- Six more banks, taken from the banks.
+--
+-- Same problem as Canara in 0010, at six times the size. The seed list
+-- described Union Bank's range as "Platinum", "Classic" and "Signature";
+-- Union Bank publishes thirteen credit cards and eight debit cards, each on
+-- its own page. Bandhan's four seeded credit cards -- Standard, Select,
+-- Premium, One -- correspond to nothing Bandhan sells: its cards are Flare,
+-- Ignite, Lumina and Sparks.
+--
+-- Every name and URL below came from the bank's own card listing. 84 pages
+-- were fetched and all 84 answered; where a page renders a heading, that
+-- heading was read back and is what the name says. PNB's per-card pages name
+-- their card in a <div class="leftbluelink title"> rather than a heading, so
+-- all 22 were diffed against each other to confirm the pages really differ
+-- by card before any of them was linked.
+--
+-- WHAT IS NOT HERE
+--
+-- Central Bank's five debit cards are added by name but carry no link: the
+-- bank lists them as text on one page and publishes no page per card. Its
+-- credit cards are absent entirely -- its credit-card page has no card list
+-- at all and links to sbicard.com, so the three seeded names could not be
+-- checked either way and are left untouched rather than guessed at.
+--
+-- YES Bank is missing for a duller reason: its site refuses automated
+-- requests, so none of its range could be read. Its seeded names stand.
+--
+-- PNB's debit cards and HSBC's have no per-card pages either, so those
+-- seeded names also stand.
+--
+-- Names that named nothing real are dropped, but only where no member had
+-- selected one -- the same rule as 0006 and 0010.`,
+    addFromCatalogue: ['UNION', 'BANDHAN', 'HSBC', 'PNB', 'BOB', 'CENTRAL'],
+    drop: [
+      ['UNION', 'credit', 'Union Bank Platinum'],
+      ['UNION', 'credit', 'Union Bank Classic'],
+      ['UNION', 'credit', 'Union Bank Signature'],
+      ['UNION', 'debit', 'Union Bank Classic Debit'],
+      ['UNION', 'debit', 'Union Bank Platinum Debit'],
+      ['UNION', 'debit', 'Union Bank RuPay Debit'],
+      ['BANDHAN', 'credit', 'Bandhan Bank Standard'],
+      ['BANDHAN', 'credit', 'Bandhan Bank Select'],
+      ['BANDHAN', 'credit', 'Bandhan Bank Premium'],
+      ['BANDHAN', 'credit', 'Bandhan Bank One'],
+      ['BANDHAN', 'debit', 'Bandhan Classic Debit'],
+      ['BANDHAN', 'debit', 'Bandhan Platinum Debit'],
+      ['BANDHAN', 'debit', 'Bandhan RuPay Debit'],
+      ['HSBC', 'credit', 'HSBC Cashback'],
+      ['HSBC', 'credit', 'HSBC Platinum'],
+      ['HSBC', 'credit', 'HSBC Premier Mastercard'],
+      ['PNB', 'credit', 'PNB Global Gold'],
+      ['PNB', 'credit', 'PNB Global Classic'],
+      ['BOB', 'debit', 'BOB Classic Debit'],
+      ['BOB', 'debit', 'BOB Platinum Debit'],
+      ['CENTRAL', 'debit', 'Central Bank Classic Debit'],
+      ['CENTRAL', 'debit', 'Central Bank Platinum Debit'],
+      ['CENTRAL', 'debit', 'Central Bank RuPay Debit'],
+    ],
+  },
 ]
 
 const escape = (value: string): string => value.replace(/'/g, "''")

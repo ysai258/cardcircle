@@ -140,25 +140,56 @@ describe('the shipped product URLs', () => {
   })
 
   /**
-   * Canara's entries were taken wholesale from canarabank.bank.in rather
-   * than recalled, so every one of them should carry a link. The single
-   * exception is the vague legacy name kept alive because a member's card
-   * points at it; it goes when they re-pick, and this test goes with it.
+   * These banks' entries were taken wholesale from the issuer rather than
+   * recalled, so every one of them should carry a link. The exceptions are
+   * listed here one by one, because each is a decision and not an oversight
+   * — and because adding a card to one of these banks without a link should
+   * fail this test rather than pass unnoticed.
    */
-  it('cover every Canara product but the one legacy name', () => {
-    const linked = new Set(
-      CARD_PRODUCT_URLS.filter(([bank]) => bank === 'CANARA').map(
-        ([, cardType, name]) => `${cardType}:${name}`,
-      ),
-    )
-    const canara = CARD_PRODUCTS.find((seed) => seed.bank === 'CANARA')
-    const missing = [
-      ...canara!.credit.map((name) => `credit:${name}`),
-      ...canara!.debit.map((name) => `debit:${name}`),
-    ].filter((key) => !linked.has(key))
+  const EXPECTED_WITHOUT_LINKS: Record<string, string[]> = {
+    // Kept alive only because a member's card points at it. Goes when they
+    // re-pick, and this line goes with it.
+    CANARA: ['debit:Canara RuPay Debit'],
+    UNION: [],
+    BANDHAN: [],
+    // HSBC India publishes no debit-card pages; these two names are older
+    // than this rebuild and could not be checked either way.
+    HSBC: ['debit:HSBC Premier Debit', 'debit:HSBC Advance Debit'],
+    // Same for PNB: its debit cards have no page of their own.
+    PNB: ['debit:PNB Classic Debit', 'debit:PNB RuPay Debit'],
+    BOB: [],
+    // Central lists its debit cards as text on one page, with no page per
+    // card, so the names are real and the links do not exist. Its credit
+    // page has no card list at all — those three names are untouched.
+    CENTRAL: [
+      'credit:Central Bank RuPay Platinum',
+      'credit:Central Bank Aspire',
+      'credit:Central Bank Classic',
+      'debit:Central Bank RuPay Select Wellness Debit',
+      'debit:Central Bank RuPay Platinum Debit',
+      'debit:Central Bank RuPay Classic Debit',
+      'debit:Central Bank Business Debit',
+      'debit:Central Bank Visa Platinum Debit',
+    ],
+  }
 
-    expect(missing).toEqual(['debit:Canara RuPay Debit'])
-  })
+  it.each(Object.keys(EXPECTED_WITHOUT_LINKS))(
+    'cover every %s product except the ones named here',
+    (bank) => {
+      const linked = new Set(
+        CARD_PRODUCT_URLS.filter(([code]) => code === bank).map(
+          ([, cardType, name]) => `${cardType}:${name}`,
+        ),
+      )
+      const seed = CARD_PRODUCTS.find((entry) => entry.bank === bank)
+      const missing = [
+        ...seed!.credit.map((name) => `credit:${name}`),
+        ...seed!.debit.map((name) => `debit:${name}`),
+      ].filter((key) => !linked.has(key))
+
+      expect(missing.sort()).toEqual([...EXPECTED_WITHOUT_LINKS[bank]].sort())
+    },
+  )
 
   it('give each product at most one URL', () => {
     const seen = new Set<string>()

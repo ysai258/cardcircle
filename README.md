@@ -224,20 +224,26 @@ protects against a database dump. It does not protect against someone who can
 read the environment. It is the honest ceiling of a zero-cost deployment; the
 key provider is swappable.
 
-**Only 176 of 306 catalogue cards link to their own page on the issuer's
-site.** Every one of those came from the bank's own sitemap or card-listing
-page and was then fetched, rather than guessed. The rest fall back to the
-bank's card list, which the UI labels as such.
+**257 of 365 catalogue cards link to their own page on the issuer's site.**
+Every one came from the bank's own sitemap or card-listing page and was then
+fetched, rather than guessed. The rest fall back to the bank's card list,
+which the UI labels as such.
 
-The gaps are mostly the catalogue's fault, not the harvester's. Names like
-"BOB Classic Debit" are a sketch of a card rather than a card — BoB publishes
-a Visa Classic, a RuPay Classic and a Mastercard Classic, and picking one
-would put a confident wrong link on someone's card. Canara is the one bank
-taken wholesale from the issuer instead (31 products, all linked), and it
-shows what the fix looks like for the rest. Four banks (Bank of India, AU,
-DBS, IDBI) refuse automated requests entirely, so nothing about them could be
-confirmed. Citi has none on purpose — its Indian card portfolio moved to Axis
-in 2023.
+Seven banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda and Central —
+have been rebuilt from their own listings, and all but the exceptions below
+are linked. The remaining gaps are the catalogue's fault rather than the
+harvester's: names like "SBI Classic Debit" are a sketch of a card rather
+than a card, and where an issuer sells three of them (Visa Classic, RuPay
+Classic, Mastercard Classic) picking one would put a confident wrong link on
+someone's card.
+
+Known exceptions, all deliberate: Central Bank lists its debit cards as text
+with no page per card, and publishes no credit-card list at all; HSBC and PNB
+publish no per-card debit pages; YES Bank's site refuses automated requests,
+so its range could not be read; four banks (Bank of India, AU, DBS, IDBI)
+refuse them too; and Citi has none on purpose, its Indian card portfolio
+having moved to Axis in 2023. `tests/unit/bank-links` lists every one of
+these by name, so a new card added without a link fails the build.
 
 **No admin area.** The schema supports it — `reports`, `audit_logs`, and
 `users.status` are all there, and disabling an account already removes its

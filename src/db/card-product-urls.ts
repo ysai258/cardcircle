@@ -11,19 +11,21 @@
  * HOW THEY WERE COLLECTED, AND WHAT THAT GUARANTEES
  *
  * Every URL below came from the issuer itself — its sitemap.xml, or its own
- * card-listing page — never from a guessed path or a search result. It was
- * then fetched: 170 of 176 returned 200.
+ * card-listing page — never from a guessed path or a search result. Each one
+ * was then fetched, and all but seven returned 200.
  *
- * The 6 that did not are all on bobcard.co.in, which Bank of Baroda's
- * own credit-card page links to and whose DNS resolves, but which refuses
- * connections from this network. Its pages are reachable from a browser; the
- * link is BoB's, not ours.
+ * Those seven are on bobcard.co.in, which Bank of Baroda's own credit-card
+ * page links to and whose DNS resolves, but which refuses connections from
+ * this network. Its pages are reachable from a browser; the link is BoB's,
+ * not ours.
  *
- * Canara's 31 are the whole of its published range, each one opened and its
- * <h1> read back. That is what it takes to get a bank to full coverage, and
- * it is why the others are not there yet.
+ * Seven banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda and
+ * Central — were taken wholesale from their own card listings rather than
+ * recalled, and each page was opened and its heading read back where the
+ * page renders one. `tests/unit/bank-links` names every product of theirs
+ * that is deliberately unlinked, so adding one without a link fails.
  *
- * WHY 130 CARDS HAVE NO ENTRY
+ * WHY THE REST HAVE NO ENTRY
  *
  * Matching is deliberately strict: the last segment of the URL has to name
  * the card and nothing else. "BOB Classic Debit" is three real cards on
@@ -243,4 +245,85 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['HSBC', 'credit', 'HSBC Visa Platinum', 'https://www.hsbc.bank.in/credit-cards/products/visa-platinum'],
   ['CSB', 'credit', 'Edge CSB Bank RuPay Credit Card (Jupiter)', 'https://www.csb.bank.in/csb-bank-edge-credit-card', 'edge-csb-bank-rupay-credit-card'],
   ['CSB', 'credit', 'Edge+ CSB Bank RuPay Credit Card (Jupiter)', 'https://jupiter.money/edge-plus-upi-rupay-credit-card', 'edge-plus-csb-bank-rupay-credit-card'],
+  ['BANDHAN', 'credit', 'Bandhan Bank Flare', 'https://creditcards.bandhan.bank.in/card-details/Flare/'],
+  ['BANDHAN', 'credit', 'Bandhan Bank Ignite', 'https://creditcards.bandhan.bank.in/card-details/Ignite/'],
+  ['BANDHAN', 'credit', 'Bandhan Bank Lumina', 'https://creditcards.bandhan.bank.in/card-details/Lumina/'],
+  ['BANDHAN', 'credit', 'Bandhan Bank Sparks', 'https://creditcards.bandhan.bank.in/card-details/Sparks/'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Avni Debit', 'https://bandhan.bank.in/personal/debit-card/avni-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Business Standard Debit', 'https://bandhan.bank.in/personal/debit-card/business-standard-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Elite Debit', 'https://bandhan.bank.in/personal/debit-card/elite-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Elite Plus Debit', 'https://bandhan.bank.in/personal/debit-card/elite-plus-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Legacy Debit', 'https://bandhan.bank.in/personal/debit-card/legacy-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Mastercard Platinum Debit', 'https://bandhan.bank.in/personal/debit-card/mastercard-platinum-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Mastercard Platinum Plus Debit', 'https://bandhan.bank.in/personal/debit-card/mastercard-platinum-plus-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Mastercard Titanium Debit', 'https://bandhan.bank.in/personal/debit-card/mastercard-titanium-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank PMJDY Debit', 'https://bandhan.bank.in/personal/debit-card/pradhan-matri-jan-dhan-yojana-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank RuPay Classic Debit', 'https://bandhan.bank.in/personal/debit-card/rupay-classic-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank RuPay Platinum Debit', 'https://bandhan.bank.in/personal/debit-card/rupay-platinum-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Visa Classic Debit', 'https://bandhan.bank.in/personal/debit-card/visa-classic-debit-card'],
+  ['BANDHAN', 'debit', 'Bandhan Bank Visa Platinum Debit', 'https://bandhan.bank.in/personal/debit-card/visa-platinum-debit-card'],
+  ['BOB', 'debit', 'BOB EaseMyTrip Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bank-of-baroda-emt-debit-card'],
+  ['BOB', 'debit', 'BOB inSIGHT Braille Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bob-insight-braille-debit-card'],
+  ['BOB', 'debit', 'BOB Mastercard Classic Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/mastercard-classic-debit-card'],
+  ['BOB', 'debit', 'BOB Mastercard Platinum Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/baroda-master-platinum-di-debit-card'],
+  ['BOB', 'debit', 'BOB Mastercard World Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/mastercard-world-debit-card'],
+  ['BOB', 'debit', 'BOB RuPay Classic Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/rupay-classic-debit-card'],
+  ['BOB', 'debit', 'BOB RuPay Platinum Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/rupay-platinum-di-debit-card'],
+  ['BOB', 'debit', 'BOB RuPay Qsparc NCMC Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/rupay-national-common-mobility-card-ncmc'],
+  ['BOB', 'debit', 'BOB Virtual Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/virtual-debit-card'],
+  ['BOB', 'debit', 'BOB Visa Classic Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/visa-classic-di-debit-card'],
+  ['BOB', 'debit', 'BOB Visa Platinum Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/visa-platinum-debit-card'],
+  ['BOB', 'debit', 'BOB Visa Vyapaar Business Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/baroda-visa-vyapaar-business-debit-card'],
+  ['BOB', 'debit', 'BOB World Agniveer Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bob-world-agniveer-debit-card'],
+  ['BOB', 'debit', 'BOB World Visa Opulence Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bob-world-visa-opulence-debit-card'],
+  ['BOB', 'debit', 'BOB World Visa Sapphire Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bob-world-visa-sapphire-debit-card'],
+  ['BOB', 'debit', 'BOB World Yoddha Debit', 'https://bankofbaroda.bank.in/digital-products/cards/debit-cards/bob-world-yoddha-debit-card'],
+  ['HSBC', 'credit', 'HSBC Live+', 'https://www.hsbc.bank.in/credit-cards/products/live-plus/'],
+  ['HSBC', 'credit', 'HSBC Premier', 'https://www.hsbc.bank.in/credit-cards/products/premier/'],
+  ['HSBC', 'credit', 'HSBC RuPay Cashback', 'https://www.hsbc.bank.in/credit-cards/products/rupay-cashback-credit-card/'],
+  ['HSBC', 'credit', 'HSBC RuPay Platinum', 'https://www.hsbc.bank.in/credit-cards/products/rupay-platinum-credit-card/'],
+  ['HSBC', 'credit', 'HSBC Taj', 'https://www.hsbc.bank.in/credit-cards/products/taj/'],
+  ['PNB', 'credit', 'PNB BLISS', 'https://creditcard.pnb.bank.in/types13.html'],
+  ['PNB', 'credit', 'PNB KIWI Co-Branded', 'https://creditcard.pnb.bank.in/types18.html'],
+  ['PNB', 'credit', 'PNB Metal LUXURA on RuPay', 'https://creditcard.pnb.bank.in/types16.html'],
+  ['PNB', 'credit', 'PNB Metal LUXURA on Visa', 'https://creditcard.pnb.bank.in/types17.html'],
+  ['PNB', 'credit', 'PNB Patanjali RuPay Select', 'https://creditcard.pnb.bank.in/types11.html'],
+  ['PNB', 'credit', 'PNB Prakram', 'https://creditcard.pnb.bank.in/types20.html'],
+  ['PNB', 'credit', 'PNB Premium Metal LUXURA (Indian Army)', 'https://creditcard.pnb.bank.in/types21.html'],
+  ['PNB', 'credit', 'PNB Rakshak RuPay Platinum', 'https://creditcard.pnb.bank.in/types7.html'],
+  ['PNB', 'credit', 'PNB Rakshak RuPay Select', 'https://creditcard.pnb.bank.in/types8.html'],
+  ['PNB', 'credit', 'PNB RRB Co-Branded RuPay Select', 'https://creditcard.pnb.bank.in/types24.html'],
+  ['PNB', 'credit', 'PNB RuPay Millennial', 'https://creditcard.pnb.bank.in/types10.html'],
+  ['PNB', 'credit', 'PNB SALARY RuPay Platinum', 'https://creditcard.pnb.bank.in/types14.html'],
+  ['PNB', 'credit', 'PNB SALARY RuPay Select', 'https://creditcard.pnb.bank.in/types15.html'],
+  ['PNB', 'credit', 'PNB Visa Classic', 'https://creditcard.pnb.bank.in/types2.html'],
+  ['PNB', 'credit', 'PNB Visa Gold', 'https://creditcard.pnb.bank.in/types1.html'],
+  ['PNB', 'credit', 'PNB Visa Platinum', 'https://creditcard.pnb.bank.in/types3.html'],
+  ['PNB', 'credit', 'PNB Visa Signature', 'https://creditcard.pnb.bank.in/types9.html'],
+  ['PNB', 'credit', 'PNB Wave & Pay', 'https://creditcard.pnb.bank.in/types4.html'],
+  ['PNB', 'credit', 'PNB Zaggle Co-Branded Twin', 'https://creditcard.pnb.bank.in/types19.html'],
+  ['UNION', 'credit', 'Union Bank DIVAA ICON', 'https://www.unionbankofindia.bank.in/en/Details/divaa-icon-credit-card'],
+  ['UNION', 'credit', 'Union Bank JCB Health', 'https://www.unionbankofindia.bank.in/en/Details/union-jcb-health-credit-card'],
+  ['UNION', 'credit', 'Union Bank JCB Wellness', 'https://www.unionbankofindia.bank.in/en/Details/union-jcb-wellness-credit-card'],
+  ['UNION', 'credit', 'Union Bank NEXTERIA', 'https://www.unionbankofindia.bank.in/en/Details/nexteria-credit-card'],
+  ['UNION', 'credit', 'Union Bank PM SVANidhi', 'https://www.unionbankofindia.bank.in/en/Details/pm-svanidhi-credit-card'],
+  ['UNION', 'credit', 'Union Bank RuPay Platinum', 'https://www.unionbankofindia.bank.in/en/Details/rupay-platinum-credit-card'],
+  ['UNION', 'credit', 'Union Bank Sparsh', 'https://www.unionbankofindia.bank.in/en/Details/union-sparsh-credit-card'],
+  ['UNION', 'credit', 'Union Bank UNI-CARBON', 'https://www.unionbankofindia.bank.in/en/Details/union-uni-carbon-credit-card'],
+  ['UNION', 'credit', 'Union Bank Unicorn RuPay', 'https://www.unionbankofindia.bank.in/en/Details/union-unicorn-credit-card'],
+  ['UNION', 'credit', 'Union Bank Visa Gold', 'https://www.unionbankofindia.bank.in/en/Details/visa-gold-credit-card'],
+  ['UNION', 'credit', 'Union Bank Visa Platinum', 'https://www.unionbankofindia.bank.in/en/Details/visa-platinum-credit-card'],
+  ['UNION', 'credit', 'Union Bank Visa Signature', 'https://www.unionbankofindia.bank.in/en/Details/visa-signature-credit-card'],
+  ['UNION', 'debit', 'Union Bank Business Debit (Platinum)', 'https://www.unionbankofindia.bank.in/en/Details/business-debit-card-platinum'],
+  ['UNION', 'debit', 'Union Bank Business Platinum Debit', 'https://www.unionbankofindia.bank.in/en/Details/business-platinum-debit-card'],
+  ['UNION', 'debit', 'Union Bank Classic Debit (RuPay / Visa)', 'https://www.unionbankofindia.bank.in/en/Details/classic-debit-card-rupay-visa'],
+  ['UNION', 'debit', 'Union Bank HNI Emperio Metal Debit', 'https://www.unionbankofindia.bank.in/en/Details/hni-emperio-metal-debit-card'],
+  ['UNION', 'debit', 'Union Bank Platinum Debit (RuPay / Visa / Mastercard)', 'https://www.unionbankofindia.bank.in/en/Details/platinum-debit-card-rupay-visa-master'],
+  ['UNION', 'debit', 'Union Bank Qsparc RuPay Debit', 'https://www.unionbankofindia.bank.in/en/Details/qsparc-debit-card-rupay'],
+  ['UNION', 'debit', 'Union Bank RuPay Empower Her Debit', 'https://www.unionbankofindia.bank.in/en/Details/rupay-empower-her-debit-card'],
+  ['UNION', 'debit', 'Union Bank RuPay Select Debit', 'https://www.unionbankofindia.bank.in/en/Details/rupay-select-debit-card'],
+  ['PNB', 'credit', 'PNB RuPay Select', 'https://creditcard.pnb.bank.in/types6.html'],
+  ['PNB', 'credit', 'PNB RuPay Platinum', 'https://creditcard.pnb.bank.in/types5.html'],
+  ['PNB', 'credit', 'PNB Patanjali RuPay Platinum', 'https://creditcard.pnb.bank.in/types12.html'],
+  ['BOB', 'credit', 'BOB Varunah', 'https://www.bobcard.co.in/credit-card-types/indian-navy-varunah'],
 ]
