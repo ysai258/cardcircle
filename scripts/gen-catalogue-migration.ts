@@ -156,6 +156,59 @@ const BATCHES: Batch[] = [
       ['YES', 'debit', 'YES Platinum Debit'],
     ],
   },
+  {
+    file: '0013_blocked_banks',
+    header: `-- The four banks that looked unreadable, and a link that was wrong.
+--
+-- AU, IDBI, DBS and Bank of India were left out of every earlier batch as
+-- "refuses automated requests". Three of the four were the same false
+-- negative as YES Bank: they reject curl and bundled Chromium on the TLS
+-- fingerprint, and render normally for the real Chrome binary. Only Bank of
+-- India is genuinely shut -- its Cloudflare challenge does not resolve
+-- headless, so its seven seeded names stand untouched and unverified.
+--
+-- 58 products added, 56 of them linked; 15 seeded names that already named
+-- a real card gain one. IDBI goes from 8 products, none linked, to 22 with
+-- every one linked.
+--
+-- HOW EACH PAGE WAS CONFIRMED
+--
+-- IDBI's card pages all render the same banner heading, so the heading
+-- proves nothing; each was read further down instead, where the page names
+-- its own card ("Royale Signature Credit Card", "Euphoria Credit Card").
+-- That also corrected the seeded "Euphoria World" to "Euphoria".
+--
+-- AU's tiles carry no links, so the names came from the tiles and the URLs
+-- from the surrounding markup; four cards (Xcite, Xcite Ultra, Xcite Ace,
+-- InstaPay) have no page at all and are added name-only.
+--
+-- A LINK THAT POINTED AT THE WRONG CARD
+--
+-- csb.bank.in/csb-bank-edge-credit-card renders <h1>Edge+ CSB Bank RuPay
+-- Credit Card</h1>. It is the Edge PLUS page. 0009 had the plain Edge card
+-- pointing at it, which sent anyone asking about Edge to a different card.
+-- Edge now points at Jupiter's own Edge page and Edge+ at CSB's, both read
+-- back from the pages themselves. CSB is in the insert list for that fix
+-- alone; none of its other entries change.
+--
+-- Federal's site rate-limits after a few requests, so five of its credit
+-- URLs and seven debit ones are taken from its own card listing without a
+-- page read. Two were read and confirmed before the block: the Imperio page
+-- names itself "Federal Bank Mastercard Imperio Credit Card", and the
+-- visa-imperio path Federal also lists renders the CELESTA heading -- so
+-- that one is deliberately not used.`,
+    addFromCatalogue: ['AUSFB', 'IDBI', 'DBS', 'FEDERAL', 'CSB'],
+    drop: [
+      ['AUSFB', 'debit', 'AU Signature Debit'],
+      ['IDBI', 'debit', 'IDBI Platinum Debit'],
+      ['IDBI', 'debit', 'IDBI RuPay Debit'],
+      ['IDBI', 'debit', 'IDBI Gold Debit'],
+      ['DBS', 'credit', 'DBS Bank Platinum'],
+      ['DBS', 'credit', 'DBS digibank Rewards'],
+      ['FEDERAL', 'debit', 'Federal Bank Platinum Debit'],
+      ['FEDERAL', 'debit', 'Federal Bank Signature Debit'],
+    ],
+  },
 ]
 
 const escape = (value: string): string => value.replace(/'/g, "''")
@@ -166,6 +219,31 @@ const urlFor = new Map(
     url,
   ]),
 )
+
+/**
+ * The slug a product is actually stored under, when it differs from the one
+ * its display name produces.
+ *
+ * card-product-urls.ts already carries these overrides for the two Jupiter
+ * co-brands, whose names end in "(Jupiter)" while their slugs do not. Without
+ * reusing them here, the INSERT's ON CONFLICT never fires and the migration
+ * adds a SECOND copy of the card rather than updating the first — which is
+ * exactly what the first run of 0013 did.
+ */
+const slugFor = new Map<string, string>([
+  // Migration 0006 seeded the three Jupiter co-brands with a "(Jupiter)"
+  // suffix on the NAME so their holders can find them, while the slug stayed
+  // the card's official identity. Listed here rather than derived from
+  // card-product-urls.ts because a product needs its stored slug whether or
+  // not it has a link — the Federal one has none.
+  ['CSB:credit:Edge+ CSB Bank RuPay Credit Card (Jupiter)', 'edge-plus-csb-bank-rupay-credit-card'],
+  ['CSB:credit:Edge CSB Bank RuPay Credit Card (Jupiter)', 'edge-csb-bank-rupay-credit-card'],
+  ['FEDERAL:credit:Edge Federal Bank VISA Credit Card (Jupiter)', 'edge-federal-bank-visa-credit-card'],
+  ...CARD_PRODUCT_URLS.filter(([, , , , slug]) => slug).map(
+    ([bank, cardType, name, , slug]) =>
+      [`${bank}:${cardType}:${name}`, slug as string] as [string, string],
+  ),
+])
 
 for (const batch of BATCHES) {
   const path = `src/db/migrations/${batch.file}.sql`
@@ -179,9 +257,11 @@ for (const batch of BATCHES) {
     if (!batch.addFromCatalogue.includes(seed.bank)) continue
     for (const cardType of ['credit', 'debit'] as const) {
       for (const name of seed[cardType]) {
-        const url = urlFor.get(`${seed.bank}:${cardType}:${name}`) ?? null
+        const key = `${seed.bank}:${cardType}:${name}`
+        const url = urlFor.get(key) ?? null
+        const slug = slugFor.get(key) ?? productSlug(name)
         rows.push(
-          `  ('${escape(seed.bank)}', '${cardType}', '${escape(name)}', '${escape(productSlug(name))}', ${
+          `  ('${escape(seed.bank)}', '${cardType}', '${escape(name)}', '${escape(slug)}', ${
             url === null ? 'NULL' : `'${escape(url)}'`
           })`,
         )

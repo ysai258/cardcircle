@@ -224,28 +224,29 @@ protects against a database dump. It does not protect against someone who can
 read the environment. It is the honest ceiling of a zero-cost deployment; the
 key provider is swappable.
 
-**294 of 405 catalogue cards link to their own page on the issuer's site.**
+**365 of 455 catalogue cards link to their own page on the issuer's site.**
 Every one came from the bank's own sitemap or card-listing page and was then
 fetched, rather than guessed. The rest fall back to the bank's card list,
 which the UI labels as such.
 
-Eight banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central and
-YES — have been rebuilt from their own listings, and all but the exceptions
-below are linked. YES Bank needed the real Chrome binary rather than bundled
-Chromium, which it rejects on the TLS fingerprint; `curl` gets only an empty
-JavaScript shell. The remaining gaps are the catalogue's fault rather than the
+Twelve banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central,
+YES, AU, IDBI, DBS and Federal — have been rebuilt from their own listings,
+and all but the exceptions below are linked. Four of them needed the real
+Chrome binary rather than bundled Chromium, which they reject on the TLS
+fingerprint; `curl` gets nothing or an empty JavaScript shell. The remaining gaps are the catalogue's fault rather than the
 harvester's: names like "SBI Classic Debit" are a sketch of a card rather
 than a card, and where an issuer sells three of them (Visa Classic, RuPay
 Classic, Mastercard Classic) picking one would put a confident wrong link on
 someone's card.
 
 Known exceptions, all deliberate: Central Bank lists its debit cards as text
-with no page per card, and publishes no credit-card list at all; HSBC and PNB
-publish no per-card debit pages; eleven YES Bank cards are real but their
-tiles lead to a generic application form rather than a page about the card;
-four banks (Bank of India, AU, DBS, IDBI) refuse automated requests entirely; and Citi has none on purpose, its Indian card portfolio
-having moved to Axis in 2023. `tests/unit/bank-links` lists every one of
-these by name, so a new card added without a link fails the build.
+with no page per card, and publishes no credit-card list at all; HSBC, PNB and
+DBS publish no per-card debit pages; some YES Bank and AU cards are real but
+their tiles lead to a generic application form rather than a page about the
+card; Bank of India's Cloudflare challenge does not resolve headless, so its
+seven names stand unverified; and Citi has none on purpose, its Indian card
+portfolio having moved to Axis in 2023. `tests/unit/bank-links` lists every
+one of these by name, so a new card added without a link fails the build.
 
 **No admin area.** The schema supports it — `reports`, `audit_logs`, and
 `users.status` are all there, and disabling an account already removes its

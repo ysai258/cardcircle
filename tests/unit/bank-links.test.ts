@@ -158,6 +158,30 @@ describe('the shipped product URLs', () => {
     // Same for PNB: its debit cards have no page of their own.
     PNB: ['debit:PNB Classic Debit', 'debit:PNB RuPay Debit'],
     BOB: [],
+    // AU shows four cards with no page of their own.
+    AUSFB: [
+      'credit:AU Xcite',
+      'credit:AU Xcite Ultra',
+      'credit:AU Xcite Ace',
+      'credit:AU InstaPay',
+    ],
+    IDBI: [],
+    // DBS publishes no debit-card pages; these three names predate the
+    // rebuild and could not be checked either way.
+    DBS: ['debit:DBS digibank Debit', 'debit:DBS Visa Debit', 'debit:DBS Treasures Debit'],
+    // Two co-brands Federal does not list on its own card pages.
+    FEDERAL: [
+      'credit:Scapia Federal',
+      'credit:Edge Federal Bank VISA Credit Card (Jupiter)',
+    ],
+    // CSB's debit pages sit behind a bot wall that real Chrome does not get
+    // past either, and OneCard is marketed on onecard.app rather than by CSB.
+    CSB: [
+      'credit:CSB OneCard',
+      'debit:CSB Classic Debit',
+      'debit:CSB Platinum Debit',
+      'debit:CSB RuPay Debit',
+    ],
     // Real cards whose tile on YES Bank's page leads to a generic
     // application form rather than a page about that card. A link to an
     // apply form is not a link to the card.

@@ -92,6 +92,13 @@
       "when": 1790380270749,
       "tag": "0012_yes_catalogue",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1790383870749,
+      "tag": "0013_blocked_banks",
+      "breakpoints": true
     }
   ]
 }

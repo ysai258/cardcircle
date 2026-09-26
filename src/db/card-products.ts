@@ -455,12 +455,26 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "IDBI Imperium",
       "IDBI Winnings",
       "IDBI Royale Signature",
-      "IDBI Euphoria"
+      "IDBI Euphoria",
+      "IDBI LICCSL Lumine",
+      "IDBI LICCSL Eclat"
     ],
     "debit": [
-      "IDBI Platinum Debit",
-      "IDBI RuPay Debit",
-      "IDBI Gold Debit"
+      "IDBI Visa Signature PayWave Debit",
+      "IDBI Visa Platinum PayWave Debit",
+      "IDBI Visa Classic PayWave Debit",
+      "IDBI Visa Gold Debit",
+      "IDBI Visa Business Debit",
+      "IDBI Visa Women's PayWave Debit",
+      "IDBI Visa Being Me PayWave Debit",
+      "IDBI Visa Kids PayWave Debit",
+      "IDBI Mastercard Classic Debit",
+      "IDBI Mastercard Platinum Debit",
+      "IDBI RuPay Select Opulentia NCMC Debit",
+      "IDBI RuPay Platinum NCMC Debit",
+      "IDBI RuPay Classic NCMC Debit",
+      "IDBI RuPay Women's Debit",
+      "IDBI RuPay Mudra Debit"
     ]
   },
   {
@@ -471,12 +485,20 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "Federal Bank Signet",
       "Scapia Federal",
       "Federal Bank RuPay Signet",
-      "Edge Federal Bank VISA Credit Card (Jupiter)"
+      "Edge Federal Bank VISA Credit Card (Jupiter)",
+      "Federal Bank RuPay Wave",
+      "Fed StarBiz Visa",
+      "Fed StarBiz RuPay"
     ],
     "debit": [
-      "Federal Bank Platinum Debit",
-      "Federal Bank Signature Debit",
-      "FedFirst Debit"
+      "FedFirst Debit",
+      "Federal Bank Visa Celesta Debit",
+      "Federal Bank Visa Imperio Debit",
+      "Federal Bank Visa Crown Debit",
+      "Federal Bank Mastercard Celesta Debit",
+      "Federal Bank Mastercard Imperio Debit",
+      "Federal Bank Mastercard Crown Debit",
+      "Federal Bank RuPay PMJDY Debit"
     ]
   },
   {
@@ -532,12 +554,40 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
       "AU Zenith+",
       "AU Xcite",
       "AU InstaPay",
-      "AU NOMO"
+      "AU NOMO",
+      "AU Ananta",
+      "AU Laksya",
+      "AU Tejas",
+      "AU Prathama",
+      "AU CA Metal",
+      "AU CS",
+      "AU Spont",
+      "AU Kosmo",
+      "AU Traverse for NRIs",
+      "AU Zaggle",
+      "CheQ AU",
+      "Paytm AU",
+      "ixigo AU",
+      "AU Xcite Ultra",
+      "AU Xcite Ace",
+      "AU Purchase",
+      "AU Business Cashback",
+      "AU Corporate"
     ],
     "debit": [
       "AU Platinum Debit",
-      "AU Signature Debit",
-      "AU Royale Debit"
+      "AU Royale Debit",
+      "AU ivy Debit",
+      "AU Eternity Debit",
+      "AU Royale World Debit",
+      "AU Royale Business Debit",
+      "AU Gold Debit",
+      "AU Visa Platinum Debit",
+      "AU Platinum Business Debit",
+      "AU Visa Business Gold Debit",
+      "AU RuPay Platinum Debit",
+      "AU RuPay Classic Debit",
+      "AU swipe&save Platinum Debit"
     ]
   },
   {
@@ -615,8 +665,8 @@ export const CARD_PRODUCTS: readonly CardProductSeed[] = [
     "bank": "DBS",
     "credit": [
       "DBS Bank Vantage",
-      "DBS Bank Platinum",
-      "DBS digibank Rewards"
+      "DBS Spark",
+      "DBS SuperCard"
     ],
     "debit": [
       "DBS digibank Debit",

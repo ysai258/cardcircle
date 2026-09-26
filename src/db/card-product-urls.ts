@@ -19,15 +19,22 @@
  * this network. Its pages are reachable from a browser; the link is BoB's,
  * not ours.
  *
- * Eight banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central
- * and YES — were taken wholesale from their own card listings rather than
- * recalled, and each page was opened and its heading read back where the
- * page renders one. `tests/unit/bank-links` names every product of theirs
- * that is deliberately unlinked, so adding one without a link fails.
+ * Twelve banks — Canara, Union, Bandhan, HSBC, PNB, Bank of Baroda, Central,
+ * YES, AU, IDBI, DBS and Federal — were taken wholesale from their own card
+ * listings rather than recalled, and each page was opened and its heading
+ * read back where the page renders one. `tests/unit/bank-links` names every
+ * product of theirs that is deliberately unlinked, so adding one without a
+ * link fails.
  *
- * YES Bank needed the real Chrome binary to read at all: it rejects bundled
- * Chromium's TLS fingerprint outright, and serves curl an empty JavaScript
- * shell.
+ * Four of those needed the real Chrome binary to read at all: YES, AU, IDBI
+ * and DBS reject bundled Chromium's TLS fingerprint outright, and serve curl
+ * either nothing or an empty JavaScript shell. Only Bank of India is
+ * genuinely unreadable — its Cloudflare challenge does not resolve headless.
+ *
+ * One link here was wrong and is worth remembering: csb.bank.in's
+ * /csb-bank-edge-credit-card renders <h1>Edge+ CSB Bank RuPay Credit
+ * Card</h1>. It is the Edge PLUS page, and the plain Edge card pointed at it
+ * for four migrations. Reading the page back is what caught it.
  *
  * WHY THE REST HAVE NO ENTRY
  *
@@ -247,8 +254,11 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['SCB', 'debit', 'Standard Chartered Platinum Debit', 'https://www.sc.bank.in/debit-cards/debit-card-platinum'],
   ['HSBC', 'credit', 'HSBC TravelOne', 'https://www.hsbc.bank.in/credit-cards/products/travelone'],
   ['HSBC', 'credit', 'HSBC Visa Platinum', 'https://www.hsbc.bank.in/credit-cards/products/visa-platinum'],
-  ['CSB', 'credit', 'Edge CSB Bank RuPay Credit Card (Jupiter)', 'https://www.csb.bank.in/csb-bank-edge-credit-card', 'edge-csb-bank-rupay-credit-card'],
-  ['CSB', 'credit', 'Edge+ CSB Bank RuPay Credit Card (Jupiter)', 'https://jupiter.money/edge-plus-upi-rupay-credit-card', 'edge-plus-csb-bank-rupay-credit-card'],
+  // csb.bank.in/csb-bank-edge-credit-card renders <h1>Edge+ CSB Bank RuPay
+  // Credit Card</h1>: it is the Edge PLUS page, so the plain Edge card points
+  // at Jupiter's own Edge page instead. Both were read back from the pages.
+  ['CSB', 'credit', 'Edge CSB Bank RuPay Credit Card (Jupiter)', 'https://jupiter.money/edge-csb-rupay-credit-card', 'edge-csb-bank-rupay-credit-card'],
+  ['CSB', 'credit', 'Edge+ CSB Bank RuPay Credit Card (Jupiter)', 'https://www.csb.bank.in/csb-bank-edge-credit-card', 'edge-plus-csb-bank-rupay-credit-card'],
   ['BANDHAN', 'credit', 'Bandhan Bank Flare', 'https://creditcards.bandhan.bank.in/card-details/Flare/'],
   ['BANDHAN', 'credit', 'Bandhan Bank Ignite', 'https://creditcards.bandhan.bank.in/card-details/Ignite/'],
   ['BANDHAN', 'credit', 'Bandhan Bank Lumina', 'https://creditcards.bandhan.bank.in/card-details/Lumina/'],
@@ -367,4 +377,75 @@ export const CARD_PRODUCT_URLS: readonly CardProductUrl[] = [
   ['YES', 'debit', 'YES Spirit Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/spirit-debit-card'],
   ['YES', 'debit', 'YES Venture Business Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/venture-debit-card'],
   ['YES', 'debit', 'YES Venture Debit', 'https://www.yes.bank.in/personal-banking/yes-individual/cards/debit-card/venture-debit-card'],
+  ['AUSFB', 'credit', 'AU Altura', 'https://www.au.bank.in/personal-banking/credit-cards/altura-credit-card'],
+  ['AUSFB', 'credit', 'AU Altura Plus', 'https://www.au.bank.in/personal-banking/credit-cards/altura-plus-credit-card'],
+  ['AUSFB', 'credit', 'AU Ananta', 'https://www.au.bank.in/personal-banking/credit-cards/ananta-credit-card'],
+  ['AUSFB', 'credit', 'AU Business Cashback', 'https://www.au.bank.in/personal-banking/commercial-credit-cards/business-cashback-credit-card'],
+  ['AUSFB', 'credit', 'AU CA Metal', 'https://www.au.bank.in/personal-banking/credit-cards/ca-credit-card'],
+  ['AUSFB', 'credit', 'AU Corporate', 'https://www.au.bank.in/personal-banking/commercial-credit-cards/corporate-credit-card'],
+  ['AUSFB', 'credit', 'AU CS', 'https://www.au.bank.in/personal-banking/credit-cards/au-cs-credit-card'],
+  ['AUSFB', 'credit', 'AU Kosmo', 'https://www.au.bank.in/personal-banking/credit-cards/kosmo-credit-card'],
+  ['AUSFB', 'credit', 'AU Laksya', 'https://www.au.bank.in/personal-banking/credit-cards/laksya-credit-card'],
+  ['AUSFB', 'credit', 'AU LIT', 'https://www.au.bank.in/personal-banking/credit-cards/lit-credit-card'],
+  ['AUSFB', 'credit', 'AU NOMO', 'https://www.au.bank.in/personal-banking/credit-cards/nomo-credit-card'],
+  ['AUSFB', 'credit', 'AU Prathama', 'https://www.au.bank.in/personal-banking/credit-cards/prathama-credit-card'],
+  ['AUSFB', 'credit', 'AU Purchase', 'https://www.au.bank.in/personal-banking/commercial-credit-cards/purchase-credit-card'],
+  ['AUSFB', 'credit', 'AU Spont', 'https://www.au.bank.in/personal-banking/credit-cards/au-spont-credit-card'],
+  ['AUSFB', 'credit', 'AU Tejas', 'https://www.au.bank.in/personal-banking/credit-cards/tejas-credit-card'],
+  ['AUSFB', 'credit', 'AU Traverse for NRIs', 'https://www.au.bank.in/personal-banking/credit-cards/traverse-credit-card'],
+  ['AUSFB', 'credit', 'AU Vetta', 'https://www.au.bank.in/personal-banking/credit-cards/vetta-credit-card'],
+  ['AUSFB', 'credit', 'AU Zaggle', 'https://www.au.bank.in/personal-banking/credit-cards/au-zaggle-credit-card'],
+  ['AUSFB', 'credit', 'AU Zenith', 'https://www.au.bank.in/personal-banking/credit-cards/zenith-credit-card'],
+  ['AUSFB', 'credit', 'AU Zenith+', 'https://www.au.bank.in/premium-banking/credit-cards/zenith-plus-credit-card'],
+  ['AUSFB', 'credit', 'CheQ AU', 'https://www.au.bank.in/personal-banking/credit-cards/cheq-au-credit-card'],
+  ['AUSFB', 'credit', 'ixigo AU', 'https://www.au.bank.in/personal-banking/credit-cards/ixigo-au-credit-card'],
+  ['AUSFB', 'credit', 'Paytm AU', 'https://www.au.bank.in/personal-banking/credit-cards/paytm-au-credit-card'],
+  ['AUSFB', 'debit', 'AU Eternity Debit', 'https://www.au.bank.in/premium-banking/debit-cards/au-eternity-debit-card'],
+  ['AUSFB', 'debit', 'AU Gold Debit', 'https://www.au.bank.in/personal-banking/debit-cards/au-gold-debit-card'],
+  ['AUSFB', 'debit', 'AU ivy Debit', 'https://www.au.bank.in/premium-banking/debit-cards/au-ivy-debit-card'],
+  ['AUSFB', 'debit', 'AU Platinum Business Debit', 'https://www.au.bank.in/personal-banking/debit-cards/visa-business-platinum-debit-card'],
+  ['AUSFB', 'debit', 'AU Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/platinum-debit-card'],
+  ['AUSFB', 'debit', 'AU Royale Business Debit', 'https://www.au.bank.in/personal-banking/debit-cards/au-royale-business-debit-card'],
+  ['AUSFB', 'debit', 'AU Royale Debit', 'https://www.au.bank.in/personal-banking/debit-cards/royale-debit-card'],
+  ['AUSFB', 'debit', 'AU Royale World Debit', 'https://www.au.bank.in/personal-banking/debit-cards/au-royale-world-debit-card'],
+  ['AUSFB', 'debit', 'AU RuPay Classic Debit', 'https://www.au.bank.in/personal-banking/debit-cards/rupay-classic-debit-card'],
+  ['AUSFB', 'debit', 'AU RuPay Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/rupay-platinum-debit-card'],
+  ['AUSFB', 'debit', 'AU swipe&save Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/au-swipe-and-save-debit-card'],
+  ['AUSFB', 'debit', 'AU Visa Business Gold Debit', 'https://www.au.bank.in/personal-banking/debit-cards/visa-business-gold-debit-card'],
+  ['AUSFB', 'debit', 'AU Visa Platinum Debit', 'https://www.au.bank.in/personal-banking/debit-cards/visa-platinum-debit-card'],
+  ['DBS', 'credit', 'DBS Bank Vantage', 'https://www.dbs.com/in/credit-cards/vantage.html'],
+  ['DBS', 'credit', 'DBS Spark', 'https://www.dbs.com/in/credit-cards/spark.html'],
+  ['DBS', 'credit', 'DBS SuperCard', 'https://www.dbs.com/in/credit-cards/supercard.html'],
+  ['FEDERAL', 'credit', 'Fed StarBiz RuPay', 'https://www.federal.bank.in/fed-starbiz-credit-card-rupay'],
+  ['FEDERAL', 'credit', 'Fed StarBiz Visa', 'https://www.federal.bank.in/fed-starbiz-credit-card-visa'],
+  ['FEDERAL', 'credit', 'Federal Bank RuPay Wave', 'https://www.federal.bank.in/rupay-wave-credit-card'],
+  ['FEDERAL', 'debit', 'Federal Bank Mastercard Celesta Debit', 'https://www.federal.bank.in/celesta-personal-contactless-debit-card'],
+  ['FEDERAL', 'debit', 'Federal Bank Mastercard Crown Debit', 'https://www.federal.bank.in/crown-contactless-debit-card'],
+  ['FEDERAL', 'debit', 'Federal Bank Mastercard Imperio Debit', 'https://www.federal.bank.in/imperio-personal-contactless-debit-card'],
+  ['FEDERAL', 'debit', 'Federal Bank RuPay PMJDY Debit', 'https://www.federal.bank.in/rupay-pmjdy-debit-card'],
+  ['FEDERAL', 'debit', 'Federal Bank Visa Celesta Debit', 'https://www.federal.bank.in/visa-celesta-contactless-cards'],
+  ['FEDERAL', 'debit', 'Federal Bank Visa Crown Debit', 'https://www.federal.bank.in/visa-crown-contactless-debit-cards'],
+  ['FEDERAL', 'debit', 'Federal Bank Visa Imperio Debit', 'https://www.federal.bank.in/visa-imperio-contactless-cards'],
+  ['IDBI', 'credit', 'IDBI Aspire', 'https://www.idbi.bank.in/aspire-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI Euphoria', 'https://www.idbi.bank.in/Euphoria-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI Imperium', 'https://www.idbi.bank.in/Imperium-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI LICCSL Eclat', 'https://www.idbi.bank.in/Eclat-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI LICCSL Lumine', 'https://www.idbi.bank.in/Lumine-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI Royale Signature', 'https://www.idbi.bank.in/royal-credit-card.aspx'],
+  ['IDBI', 'credit', 'IDBI Winnings', 'https://www.idbi.bank.in/Winnings-credit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Mastercard Classic Debit', 'https://www.idbi.bank.in/mastercard_classic-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Mastercard Platinum Debit', 'https://www.idbi.bank.in/mastercard-platinum-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI RuPay Classic NCMC Debit', 'https://www.idbi.bank.in/rupay_classic_NCMC_debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI RuPay Mudra Debit', 'https://www.idbi.bank.in/rupay-mudra-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI RuPay Platinum NCMC Debit', 'https://www.idbi.bank.in/rupay_platinum_NCMC_debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI RuPay Select Opulentia NCMC Debit', 'https://www.idbi.bank.in/rupay-select-opulentia-ncmc-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI RuPay Women\'s Debit', 'https://www.idbi.bank.in/rupay-women-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Being Me PayWave Debit', 'https://www.idbi.bank.in/being-me-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Business Debit', 'https://www.idbi.bank.in/visa-business-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Classic PayWave Debit', 'https://www.idbi.bank.in/classic-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Gold Debit', 'https://www.idbi.bank.in/gold-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Kids PayWave Debit', 'https://www.idbi.bank.in/visa-kids-paywave-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Platinum PayWave Debit', 'https://www.idbi.bank.in/platinum-debit-card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Signature PayWave Debit', 'https://www.idbi.bank.in/signature_debit_card.aspx'],
+  ['IDBI', 'debit', 'IDBI Visa Women\'s PayWave Debit', 'https://www.idbi.bank.in/visa-women-paywave-debit-card.aspx'],
 ]
