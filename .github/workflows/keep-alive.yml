@@ -1,0 +1,90 @@
+# Pings the database so Supabase never pauses the project — and shouts when
+# the ping fails.
+#
+# WHY THIS EXISTS ALONGSIDE VERCEL CRON
+#
+# Vercel Cron already calls the same endpoint daily. On 24 Oct 2026 the
+# Supabase project paused anyway: the cron was enabled and firing, but half
+# its invocations were failing and nothing was watching, so the first anyone
+# knew was Supabase's "your project has been paused" email seven days later.
+#
+# Two problems, two fixes, both here:
+#
+#   FREQUENCY  Vercel's Hobby plan allows one cron run a day, so a single
+#              bad day is 1/7th of the pause window. Four runs a day means
+#              three can fail before the clock is even dented.
+#
+#   SILENCE    A failed GitHub Actions run emails the repository owner. That
+#              is the whole point — a keep-alive that fails quietly is worse
+#              than none, because it reads as protection that is not there.
+#
+# CAVEAT WORTH KNOWING
+#
+# GitHub disables scheduled workflows in a repository with no activity for
+# 60 days, and emails before it does. 60 days is comfortably longer than
+# Supabase's 7-day window, but if this repo goes quiet for two months,
+# re-enable the schedule from the Actions tab.
+
+name: keep-alive
+
+on:
+  schedule:
+    # Every six hours. GitHub runs scheduled jobs on a best-effort basis and
+    # can delay them under load, which is survivable at four a day and would
+    # not be at one.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+# Two runs pinging the same endpoint help nobody; let a manual run win.
+concurrency:
+  group: keep-alive
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the keep-alive endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          ENDPOINT: https://cardcircle-six.vercel.app/api/cron/keep-alive
+        run: |
+          set -uo pipefail
+
+          if [ -z "${CRON_SECRET}" ]; then
+            echo "::error::CRON_SECRET is not set in this repository's secrets."
+            echo "Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+          # Three attempts before giving up. A cold Vercel function talking
+          # to a cold database can take a few seconds, and an alert that
+          # cries wolf gets muted — which would put us back where we started.
+          for attempt in 1 2 3; do
+            body=$(mktemp)
+            status=$(curl --silent --show-error --max-time 60 \
+              --output "${body}" --write-out '%{http_code}' \
+              --header "Authorization: Bearer ${CRON_SECRET}" \
+              "${ENDPOINT}" || echo "000")
+
+            if [ "${status}" = "200" ]; then
+              echo "attempt ${attempt}: ${status}"
+              cat "${body}"
+              echo
+              # The endpoint answers 200 only after counting rows in a real
+              # table, so this line means the database served data.
+              exit 0
+            fi
+
+            echo "attempt ${attempt}: HTTP ${status}"
+            cat "${body}" || true
+            echo
+            rm -f "${body}"
+            [ "${attempt}" -lt 3 ] && sleep 15
+          done
+
+          echo "::error::Keep-alive failed three times (last status ${status})."
+          echo "The Supabase project pauses after 7 days without activity."
+          echo "A 404 here means the bearer token did not match CRON_SECRET in Vercel."
+          exit 1
