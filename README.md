@@ -176,7 +176,16 @@ suspends its compute after about five minutes idle, and this app is used
 sporadically — someone checks it while shopping, then closes it. That made a
 cold start the normal case, not the exception: the first request after a
 quiet spell took over a minute. Supabase only pauses after about a week, and
-a daily keep-alive cron resets that clock so it never arrives.
+a keep-alive ping resets that clock so it never arrives.
+
+It arrived once anyway, on 24 October 2026, and the site went down for
+everyone. The Vercel cron was enabled and firing, but half its runs were
+failing and nothing watched it, so the first warning was Supabase's email —
+seven days after the last activity. The keep-alive now runs from two places
+rather than one (Vercel daily, GitHub Actions every six hours), counts rows
+in a real table instead of running `SELECT 1`, and fails loudly: a failed
+Actions run emails the repository owner. A keep-alive that fails quietly is
+worse than none, because it reads as protection that is not there.
 
 The same trick cannot rescue Neon: a five-minute window needs a ping every
 few minutes — roughly 360 a day, beyond Hobby's daily cron granularity, and
